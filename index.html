@@ -69,6 +69,9 @@
     transition:background .12s,color .12s;
   }
   .cell:hover{background:var(--black); color:var(--white)}
+  .cell svg{width:100%; height:150px; margin:14px 0 6px}
+  .cell svg *{stroke:#000; fill:none; stroke-width:1.5; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke}
+  .cell:hover svg *{stroke:#fff}
   .cell .idx{font-size:11px; letter-spacing:.2em; color:var(--gray)}
   .cell:hover .idx{color:#aaa}
   .cell h3{font-size:16px; font-weight:500; margin-top:30px}
@@ -1284,6 +1287,22 @@ function applyI18n(){
 }
 
 /* ============================== RENDER: CATEGORIES ============================== */
+const CARD_SVG = {
+  raf: `<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <rect x="58" y="10" width="84" height="140" rx="16"/>
+    <rect x="70" y="22" width="60" height="116" rx="9"/>
+    <line x1="70" y1="51" x2="130" y2="51"/>
+    <line x1="70" y1="80" x2="130" y2="80"/>
+    <line x1="70" y1="109" x2="130" y2="109"/></svg>`,
+  counter: `<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+    <rect x="34" y="50" width="132" height="13" rx="6"/>
+    <rect x="48" y="63" width="104" height="70" rx="10"/>
+    <rect x="58" y="73" width="84" height="50" rx="7"/>
+    <line x1="58" y1="98" x2="142" y2="98"/>
+    <line x1="60" y1="133" x2="56" y2="150"/>
+    <line x1="140" y1="133" x2="144" y2="150"/></svg>`,
+};
+function cardSVG(catId, icon){ return CARD_SVG[catId] || modelSVG(icon); }
 function renderCats(){
   const g = $("#catGrid"); g.innerHTML = "";
   CATS.forEach((c,i)=>{
@@ -1293,7 +1312,7 @@ function renderCats(){
     d.className = "cell";
     d.style.minHeight = "240px";
     d.innerHTML = `<span class="idx">${String(i+1).padStart(2,"0")}</span>
-                   ${modelSVG(dz.icon)}
+                   ${cardSVG(c.id, dz.icon)}
                    <div><h3>${c[lang]}</h3><div class="sub">${p.w} × ${p.h} × ${p.d} mm</div></div>`;
     d.onclick = ()=>{ state.cat = c.id; selectDesign(dz); go(2); };
     g.appendChild(d);
@@ -1344,7 +1363,7 @@ function renderModels(){
     const badges = [];
     if(dz.p.doorType && dz.p.doorType!=="none") badges.push(t("doors"));
     if(dz.p.frontMode==="plate") badges.push(t("frontPlate"));
-    d.innerHTML = `${modelSVG(dz.icon)}
+    d.innerHTML = `${cardSVG(state.cat, dz.icon)}
       <h3>${dz[lang]}</h3>${badges.length?`<p>${badges.join(" · ")}</p>`:"<p>&nbsp;</p>"}
       <div class="dims">${dz.p.w} × ${dz.p.h} × ${dz.p.d} mm</div>`;
     d.onclick = ()=>{ selectDesign(dz); go(2); };
