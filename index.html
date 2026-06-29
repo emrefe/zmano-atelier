@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZMANO ATELIER — Raf & Tezgah</title>
+<style>
+  :root{
+    --black:#000; --white:#fff; --gray:#888; --line:#000;
+    --bg:#fff; --hair:1px solid var(--line);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased}
+  body{
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--black);
+    font-size:15px; line-height:1.5;
+  }
+  ::selection{background:#000;color:#fff}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 40px; height:72px; border-bottom:var(--hair);
+    position:sticky; top:0; background:var(--bg); z-index:50;
+  }
+  .logo{font-size:20px; font-weight:700; letter-spacing:.35em; cursor:pointer}
+  .logo span{font-weight:300}
+  .hdr-right{display:flex; align-items:center; gap:28px}
+  .lang{display:flex; border:var(--hair); cursor:pointer; user-select:none}
+  .lang div{padding:4px 12px; font-size:11px; letter-spacing:.15em}
+  .lang div.on{background:var(--black); color:var(--white)}
+
+  /* ---------- steps ---------- */
+  nav.steps{
+    display:flex; border-bottom:var(--hair);
+  }
+  nav.steps div{
+    flex:1; padding:14px 40px; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--gray); border-right:var(--hair);
+    cursor:default; white-space:nowrap; overflow:hidden;
+  }
+  nav.steps div:last-child{border-right:none}
+  nav.steps div b{font-weight:400; margin-right:10px}
+  nav.steps div.active{color:var(--black)}
+  nav.steps div.done{color:var(--black); cursor:pointer}
+  nav.steps div.done:hover{background:var(--black); color:var(--white)}
+
+  main{min-height:calc(100vh - 200px)}
+  .screen{display:none}
+  .screen.on{display:block}
+
+  .intro{padding:64px 40px 48px; max-width:880px}
+  .intro h1{font-size:34px; font-weight:300; line-height:1.2; margin-bottom:14px}
+  .intro h1 strong{font-weight:700}
+  .intro p{color:var(--gray); max-width:560px}
+
+  /* ---------- category grid ---------- */
+  .grid{
+    display:grid; grid-template-columns:repeat(6,1fr);
+    border-top:var(--hair);
+  }
+  @media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .cell{
+    border-right:var(--hair); border-bottom:var(--hair);
+    padding:28px 24px 24px; cursor:pointer; min-height:150px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    transition:background .12s,color .12s;
+  }
+  .cell:hover{background:var(--black); color:var(--white)}
+  .cell .idx{font-size:11px; letter-spacing:.2em; color:var(--gray)}
+  .cell:hover .idx{color:#aaa}
+  .cell h3{font-size:16px; font-weight:500; margin-top:30px}
+  .cell .sub{font-size:11px; color:var(--gray); letter-spacing:.05em; margin-top:2px}
+  .cell:hover .sub{color:#aaa}
+
+  /* ---------- model grid ---------- */
+  .models{display:grid; grid-template-columns:repeat(3,1fr); border-top:var(--hair)}
+  @media(max-width:900px){.models{grid-template-columns:1fr}}
+  .model{
+    border-right:var(--hair); border-bottom:var(--hair);
+    padding:32px; cursor:pointer; transition:background .12s,color .12s;
+  }
+  .model:hover{background:var(--black); color:var(--white)}
+  .model:hover svg *{stroke:#fff}
+  .model svg{width:100%; height:160px; margin-bottom:24px}
+  .model svg *{stroke:#000; fill:none; stroke-width:1.5; transition:stroke .12s}
+  .model h3{font-size:16px; font-weight:500}
+  .model p{font-size:12px; color:var(--gray); margin-top:4px}
+  .model:hover p{color:#aaa}
+  .model .dims{font-size:11px; letter-spacing:.1em; margin-top:14px; color:var(--gray)}
+  .model:hover .dims{color:#aaa}
+
+  /* ---------- configurator ---------- */
+  .config{display:grid; grid-template-columns:1fr 380px; min-height:calc(100vh - 130px)}
+  @media(max-width:900px){.config{grid-template-columns:1fr}}
+  .viewport{position:relative; border-right:var(--hair); background:#fafafa; min-height:480px}
+  #c3d{position:absolute; inset:0; width:100%; height:100%; cursor:grab}
+  #c3d:active{cursor:grabbing}
+  .vp-hint{position:absolute; left:24px; bottom:18px; font-size:11px; color:var(--gray); letter-spacing:.1em; pointer-events:none}
+  .vp-dims{position:absolute; left:24px; top:18px; font-size:12px; letter-spacing:.08em; font-variant-numeric:tabular-nums; pointer-events:none}
+
+  .panel{overflow-y:auto; max-height:calc(100vh - 130px)}
+  .ctl{border-bottom:var(--hair); padding:22px 28px}
+  .ctl label{display:flex; justify-content:space-between; font-size:11px; letter-spacing:.18em; text-transform:uppercase; margin-bottom:12px}
+  .ctl label .val{font-variant-numeric:tabular-nums; letter-spacing:.05em}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:1px; background:#000; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; background:#fff;
+    border:1.5px solid #000; border-radius:50%; cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:13px; height:13px; background:#fff; border:1.5px solid #000; border-radius:50%; cursor:pointer;
+  }
+  .seg{display:flex; border:var(--hair)}
+  .seg div{
+    flex:1; text-align:center; padding:9px 4px; font-size:12px; cursor:pointer;
+    border-right:var(--hair); user-select:none;
+  }
+  .seg div:last-child{border-right:none}
+  .seg div.on{background:var(--black); color:var(--white)}
+  .seg.dis{opacity:.3; pointer-events:none}
+  .adv-head{
+    padding:16px 28px; border-bottom:var(--hair); font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; cursor:pointer; display:flex; justify-content:space-between;
+    user-select:none;
+  }
+  .adv-head:hover{background:var(--black); color:var(--white)}
+  .adv-body{display:none}
+  .adv-body.open{display:block}
+  .vp-btn{
+    position:absolute; right:18px; top:14px; border:var(--hair); padding:6px 14px;
+    font-size:10px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+    background:var(--white); user-select:none; z-index:5;
+  }
+  .vp-btn:hover{background:#000; color:#fff}
+  .vp-btn.on{background:#000; color:#fff}
+  .mats{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .mat{border:var(--hair); padding:10px 12px; cursor:pointer; display:flex; gap:10px; align-items:center}
+  .mat.on{background:var(--black); color:var(--white)}
+  .mat .sw{width:22px; height:22px; border:1px solid #999; flex:none}
+  .mat .nm{font-size:12px; line-height:1.25}
+  .mat .pr{font-size:10px; color:var(--gray)}
+  .mat.on .pr{color:#aaa}
+  .toggle{display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none}
+  .toggle .tk{width:38px; height:20px; border:var(--hair); position:relative; flex:none}
+  .toggle .tk::after{content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#fff; border:1px solid #000; transition:left .12s, background .12s}
+  .toggle.on .tk{background:#000}
+  .toggle.on .tk::after{left:19px; background:#fff; border-color:#fff}
+  .toggle .tlabel{font-size:11px; letter-spacing:.18em; text-transform:uppercase}
+
+  .pricebar{
+    padding:24px 28px; display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:var(--hair);
+  }
+  .pricebar .plabel{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gray)}
+  .pricebar .pval{font-size:28px; font-weight:300; font-variant-numeric:tabular-nums}
+  .pricebar .pmeta{font-size:11px; color:var(--gray); text-align:right; line-height:1.6}
+
+  .btn{
+    display:block; width:100%; padding:18px; background:var(--black); color:var(--white);
+    border:none; font-size:12px; letter-spacing:.25em; text-transform:uppercase;
+    cursor:pointer; font-family:inherit;
+  }
+  .btn:hover{background:#222}
+  .btn.ghost{background:#fff; color:#000; border:var(--hair)}
+  .btn.ghost:hover{background:#000; color:#fff}
+
+  /* ---------- summary ---------- */
+  .summary{display:grid; grid-template-columns:1fr 1fr; min-height:calc(100vh - 130px)}
+  @media(max-width:900px){.summary{grid-template-columns:1fr}}
+  .sum-left{border-right:var(--hair); padding:48px 40px}
+  .sum-right{padding:48px 40px; display:flex; flex-direction:column; gap:0}
+  .sum-left h2,.sum-right h2{font-size:12px; letter-spacing:.25em; text-transform:uppercase; margin-bottom:24px; color:var(--gray)}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{text-align:left; padding:9px 4px; border-bottom:1px solid #ddd; font-weight:400; font-variant-numeric:tabular-nums}
+  th{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--gray)}
+  td.r,th.r{text-align:right}
+  .spec{display:grid; grid-template-columns:auto 1fr; gap:6px 28px; font-size:13px; margin-bottom:36px}
+  .spec dt{color:var(--gray); font-size:11px; letter-spacing:.15em; text-transform:uppercase; padding-top:2px}
+  .spec dd{font-variant-numeric:tabular-nums}
+  .total-row{display:flex; justify-content:space-between; padding:18px 4px; font-size:18px; border-bottom:var(--hair)}
+  .dl-group{margin-top:36px; display:flex; flex-direction:column; gap:12px}
+  .note{font-size:11px; color:var(--gray); margin-top:16px; line-height:1.7}
+
+  footer{
+    border-top:var(--hair); padding:20px 40px; display:flex; justify-content:space-between;
+    font-size:11px; color:var(--gray); letter-spacing:.1em;
+  }
+
+  .back{
+    display:inline-block; margin:24px 40px 0; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; cursor:pointer; border-bottom:1px solid #000; padding-bottom:2px;
+  }
+  .back:hover{background:#000; color:#fff}
+  .sec-title{padding:40px 40px 24px}
+  .sec-title h2{font-size:24px; font-weight:300}
+  .sec-title h2 strong{font-weight:600}
+  .sec-title p{color:var(--gray); font-size:13px; margin-top:4px}
+
+  .modal{
+    position:fixed; inset:0; background:rgba(255,255,255,.96); z-index:100;
+    display:none; align-items:center; justify-content:center;
+  }
+  .modal.on{display:flex}
+  .modal .box{border:var(--hair); background:#fff; padding:48px; max-width:440px; text-align:center}
+  .modal .box h3{font-weight:500; margin-bottom:12px; letter-spacing:.05em}
+  .modal .box p{font-size:13px; color:var(--gray); margin-bottom:28px}
+</style>
+</head>
+<body>
+
+<!-- ===== BASİT GİRİŞ KAPISI (paylaşım için) ===== -->
+<div id="gate" style="position:fixed;inset:0;background:#fff;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div style="border:1px solid #000;padding:48px 44px;max-width:340px;text-align:center">
+    <div style="font-size:20px;font-weight:700;letter-spacing:.35em;margin-bottom:6px">ZMANO</div>
+    <div style="font-size:11px;letter-spacing:.2em;color:#888;text-transform:uppercase;margin-bottom:28px">Atölye · Özel Erişim</div>
+    <input id="gatePass" type="password" placeholder="Şifre" autocomplete="off"
+      style="width:100%;padding:12px;border:1px solid #000;font-size:14px;font-family:inherit;text-align:center;letter-spacing:.1em;box-sizing:border-box">
+    <div id="gateErr" style="font-size:11px;color:#c33;height:14px;margin-top:8px"></div>
+    <button id="gateBtn" style="width:100%;padding:14px;margin-top:10px;background:#000;color:#fff;border:none;font-size:12px;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;font-family:inherit">Giriş</button>
+  </div>
+</div>
+<script>
+(function(){
+  // NOT: İstemci tarafı kapı — gerçek güvenlik değil, basit özel paylaşım içindir.
+  var PASS = "zmano2026";                       // <-- şifreyi buradan değiştir
+  function tryOpen(){
+    var v=document.getElementById('gatePass').value;
+    if(v===PASS){ try{sessionStorage.setItem('zmano_ok','1');}catch(e){} document.getElementById('gate').style.display='none'; }
+    else { document.getElementById('gateErr').textContent='Hatalı şifre'; }
+  }
+  document.getElementById('gateBtn').onclick=tryOpen;
+  document.getElementById('gatePass').addEventListener('keydown',function(e){ if(e.key==='Enter') tryOpen(); });
+  try{ if(sessionStorage.getItem('zmano_ok')==='1') document.getElementById('gate').style.display='none'; }catch(e){}
+})();
+</script>
+
+<header>
+  <div class="logo" onclick="go(0)">ZMANO<span>&nbsp;</span></div>
+  <div class="hdr-right">
+    <div style="font-size:11px;letter-spacing:.15em;color:var(--gray)" data-i18n="tagline"></div>
+    <div class="lang" id="langSwitch">
+      <div data-l="tr" class="on">TR</div><div data-l="en">EN</div>
+    </div>
+  </div>
+</header>
+
+<nav class="steps" id="steps"></nav>
+
+<main>
+  <!-- STEP 0 : categories -->
+  <section class="screen on" id="s0">
+    <div class="intro">
+      <h1 data-i18n-html="heroTitle"></h1>
+      <p data-i18n="heroSub"></p>
+    </div>
+    <div class="grid" id="catGrid"></div>
+  </section>
+
+  <!-- STEP 1 : models -->
+  <section class="screen" id="s1">
+    <span class="back" onclick="go(0)" data-i18n="back"></span>
+    <div class="sec-title"><h2 id="catTitle"></h2><p data-i18n="modelSub"></p></div>
+    <div class="models" id="modelGrid"></div>
+  </section>
+
+  <!-- STEP 2 : configurator -->
+  <section class="screen" id="s2">
+    <div class="config">
+      <div class="viewport">
+        <canvas id="c3d"></canvas>
+        <div class="vp-dims" id="vpDims"></div>
+        <div class="vp-btn" id="explBtn" data-i18n="explode"></div>
+        <div class="vp-hint" data-i18n="dragHint"></div>
+        <div class="vp-fallback" id="vpFallback" style="display:none;position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:40px;font-size:13px;color:#888;line-height:1.8"></div>
+      </div>
+      <div class="panel">
+        <div class="ctl">
+          <label><span data-i18n="width"></span><span class="val" id="wVal"></span></label>
+          <input type="range" id="wRange" min="300" max="2400" step="10">
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="height"></span><span class="val" id="hVal"></span></label>
+          <input type="range" id="hRange" min="300" max="2400" step="10">
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="depth"></span><span class="val" id="dVal"></span></label>
+          <input type="range" id="dRange" min="200" max="700" step="10">
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="shelves"></span><span class="val" id="sVal"></span></label>
+          <div class="seg" id="shelfSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="material"></span></label>
+          <div class="mats" id="matGrid"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="doors"></span></label>
+          <div class="seg" id="doorSeg"></div>
+        </div>
+        <div class="ctl" id="doorMatCtl">
+          <label><span data-i18n="doorColor"></span></label>
+          <div class="mats" id="doorMatGrid"></div>
+        </div>
+        <div class="ctl">
+          <div class="toggle" id="frameTgl"><span class="tlabel" data-i18n="frame"></span><span class="tk"></span></div>
+        </div>
+        <div class="ctl" id="frameRadCtl">
+          <label><span data-i18n="frameRad"></span><span class="val" id="frameRadVal"></span></label>
+          <input type="range" id="frameRadRange" min="6" max="60" step="2">
+        </div>
+        <div class="adv-head" id="advHead"><span data-i18n="advanced"></span><span id="advArrow">+</span></div>
+        <div class="adv-body" id="advBody">
+        <div class="ctl">
+          <label><span data-i18n="capMode"></span></label>
+          <div class="seg" id="capModeSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="thickness"></span></label>
+          <div class="seg" id="thickSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="backPanel"></span></label>
+          <div class="seg" id="backSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="front"></span></label>
+          <div class="seg" id="frontSeg"></div>
+        </div>
+        <div class="ctl" id="frameWCtl">
+          <label><span data-i18n="frameW"></span><span class="val" id="frameWVal"></span></label>
+          <input type="range" id="frameWRange" min="35" max="160" step="5">
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="winRad"></span><span class="val" id="winRadVal"></span></label>
+          <input type="range" id="winRadRange" min="8" max="80" step="2">
+        </div>
+        <div class="ctl" id="plateStyleCtl">
+          <label><span data-i18n="plateStyle"></span></label>
+          <div class="seg" id="plateStyleSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="ventSurf"></span></label>
+          <div class="seg" id="ventSurfSeg"></div>
+        </div>
+        <div class="ctl" id="ventCfg1">
+          <label><span data-i18n="ventDir"></span></label>
+          <div class="seg" id="ventDirSeg"></div>
+        </div>
+        <div class="ctl" id="ventCfg2">
+          <label><span data-i18n="ventLen"></span><span class="val" id="ventLenVal"></span></label>
+          <input type="range" id="ventLenRange" min="60" max="240" step="10">
+        </div>
+        <div class="ctl" id="ventCfg3">
+          <label><span data-i18n="ventW"></span><span class="val" id="ventWVal"></span></label>
+          <input type="range" id="ventWRange" min="4" max="16" step="2">
+        </div>
+        <div class="ctl" id="ventCfg4">
+          <div class="toggle" id="stagTgl"><span class="tlabel" data-i18n="ventStagger"></span><span class="tk"></span></div>
+        </div>
+        <div class="ctl">
+          <div class="toggle" id="divTgl"><span class="tlabel" data-i18n="divider"></span><span class="tk"></span></div>
+        </div>
+        <div class="ctl" id="divPosCtl">
+          <label><span data-i18n="dividerPos"></span><span class="val" id="divPosVal"></span></label>
+          <input type="range" id="divPosRange" min="20" max="80" step="5">
+        </div>
+        <div class="ctl">
+          <div class="toggle" id="noBotTgl"><span class="tlabel" data-i18n="noBottom"></span><span class="tk"></span></div>
+        </div>
+        <div class="ctl" id="pegStyleCtl">
+          <label><span data-i18n="pegStyle"></span></label>
+          <div class="seg" id="pegStyleSeg"></div>
+        </div>
+        <div class="ctl" id="pegDCtl">
+          <label><span data-i18n="pegD"></span><span class="val" id="pegDVal"></span></label>
+          <input type="range" id="pegDRange" min="6" max="20" step="1">
+        </div>
+        <div class="ctl" id="pegPitchCtl">
+          <label><span data-i18n="pegPitch"></span><span class="val" id="pegPitchVal"></span></label>
+          <input type="range" id="pegPitchRange" min="30" max="90" step="2">
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="modules"></span><span class="val" id="modVal"></span></label>
+          <div class="seg" id="modSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="wheels"></span></label>
+          <div class="seg" id="wheelSeg"></div>
+        </div>
+        <div class="ctl" id="wheelColCtl">
+          <label><span data-i18n="wheelColor"></span></label>
+          <div class="seg" id="wheelColSeg"></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="ct"></span></label>
+          <div class="seg" id="ctSeg"></div>
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctThick"></span></label>
+          <div class="seg" id="ctTSeg"></div>
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctOverF"></span><span class="val" id="ctOverFVal"></span></label>
+          <input type="range" id="ctOverFRange" min="0" max="80" step="5">
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctOverB"></span><span class="val" id="ctOverBVal"></span></label>
+          <input type="range" id="ctOverBRange" min="0" max="80" step="5">
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctOverL"></span><span class="val" id="ctOverLVal"></span></label>
+          <input type="range" id="ctOverLRange" min="0" max="80" step="5">
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctOverR"></span><span class="val" id="ctOverRVal"></span></label>
+          <input type="range" id="ctOverRRange" min="0" max="80" step="5">
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctRad"></span></label>
+          <div class="seg" id="ctRadModeSeg"></div>
+        </div>
+        <div class="ctl ct-sub">
+          <label><span data-i18n="ctRad"></span><span class="val" id="ctRadVal"></span></label>
+          <input type="range" id="ctRadRange" min="0" max="40" step="2">
+        </div>
+        <div class="ctl ct-sub">
+          <div class="toggle" id="ctGrooveTgl"><span class="tlabel" data-i18n="ctGroove"></span><span class="tk"></span></div>
+        </div>
+        <div class="ctl">
+          <label><span data-i18n="edgeRound"></span><span class="val" id="edgeVal"></span></label>
+          <input type="range" id="edgeRange" min="0" max="10" step="1">
+        </div>
+        <div class="ctl">
+          <div class="toggle on" id="winTgl"><span class="tlabel" data-i18n="windows"></span><span class="tk"></span></div>
+        </div>
+        </div>
+        <div class="pricebar">
+          <div>
+            <div class="plabel" data-i18n="estPrice"></div>
+            <div class="pval" id="price"></div>
+          </div>
+          <div class="pmeta" id="priceMeta"></div>
+        </div>
+        <button class="btn" onclick="go(3)" data-i18n="next"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 : summary -->
+  <section class="screen" id="s3">
+    <span class="back" onclick="go(2)" data-i18n="backCfg"></span>
+    <div class="summary">
+      <div class="sum-left">
+        <h2 data-i18n="orderSummary"></h2>
+        <dl class="spec" id="specList"></dl>
+        <h2 data-i18n="partsList"></h2>
+        <table id="partsTable"></table>
+        <div class="total-row"><span data-i18n="total"></span><strong id="totalPrice"></strong></div>
+      </div>
+      <div class="sum-right">
+        <h2 data-i18n="production"></h2>
+        <p style="font-size:13px;color:var(--gray);max-width:420px" data-i18n="prodDesc"></p>
+        <div class="dl-group">
+          <button class="btn ghost" onclick="downloadDXF()" data-i18n="dlDxf"></button>
+          <button class="btn ghost" onclick="downloadPDF()" data-i18n="dlPdf"></button>
+          <button class="btn" onclick="orderModal(true)" data-i18n="placeOrder"></button>
+        </div>
+        <p class="note" data-i18n="prodNote"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>ZMANO © 2026</span>
+  <span data-i18n="footerQuote"></span>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <h3 data-i18n="thanksTitle"></h3>
+    <p data-i18n="thanksBody"></p>
+    <button class="btn" onclick="orderModal(false)" data-i18n="close"></button>
+  </div>
+</div>
+
+<script>
+/* ============================== DATA ============================== */
+const I18N = {
+  tr:{
+    tagline:"Atölye — Raf & Tezgah",
+    step0:"Ürün", step2:"Özelleştir", step3:"Üretim", chooseProduct:"İki sistemden birini seçin", frame:"Radius Çerçeve", frameRad:"Çerçeve Radiusu", noframe:"—", pFrame:"Radius Çerçeve",
+    heroTitle:"İki sistem, <strong>sonsuz ölçü.</strong>",
+    heroSub:"Mimarlar için sade bir araç: açık raf üniteleri ve mutfak tezgahları. Ölçüyü girin, CNC-hazır üretim dosyalarını alın.",
+    step0:"Mekân", step1:"Model", step2:"Özelleştir", step3:"Üretim",
+    back:"← Mekânlar", backCfg:"← Özelleştir", modelSub:"Genel kullanıma uygun çözüm tipleri. Hepsi tamamen özelleştirilebilir.",
+    width:"Genişlik", height:"Yükseklik", depth:"Derinlik", shelves:"Raf Adedi",
+    material:"Malzeme", thickness:"Kalınlık", backPanel:"Arkalık", doors:"Kapaklar",
+    estPrice:"Tahmini Fiyat", next:"İleri →", dragHint:"Sürükle: döndür · Tekerlek: yakınlaştır",
+    windows:"Pencere Kesimi", explode:"Patlatılmış Görünüm",
+    front:"Ön Yüz", frontOpen:"Açık", frontPlate:"Radius Önlük",
+    backNone:"Yok", backSolid:"Kapalı", backWindow:"Pencereli",
+    doorNone:"Yok", doorSingle:"Tek Kanat", doorDouble:"Çift Kanat",
+    doorColor:"Kapak Rengi", designs:"tasarım", outerRadius:"Dış Radius",
+    frameW:"Çerçeve Genişliği", edgeRound:"Kenar Radiusu",
+    capMode:"Kapak Yapısı", capInset:"İçe Oturan", capOverlay:"Bindirmeli",
+    winRad:"Pencere Radiusu", plateStyle:"Önlük Deseni",
+    psWindow:"Pencere", psSlats:"Kanal", psSlots:"Şerit", psHoles:"Delikli",
+    doorSlide:"Sürgü",
+    ventSurf:"Havalandırma Yüzeyleri", vTop:"Üst", vSide:"Yan", vBottom:"Alt", vCT:"Tabla",
+    ventDir:"Şerit Yönü", dirH:"Yatay", dirV:"Dikey",
+    ventLen:"Şerit Boyu", ventW:"Şerit Genişliği", ventStagger:"Şaşırtmalı Dizilim",
+    divider:"Isı Ayracı (kalorifere paralel)", dividerPos:"Ayraç Derinliği", pDivider:"Isı Ayracı",
+    vDoor:"Kapak", ctGroove:"Kanallı Tabla (üst kapaksız)", noBottom:"Alt Kapak Yok",
+    pegStyle:"Desen", pegHoles:"Delik", pegSlots:"Şerit", pegD:"Delik Çapı", pegPitch:"Aralık",
+    pPeg:"Pano", pCleat:"Gizli Askı Çıtası", pBar:"Çubuk (Masif Ön Yüz)", pMagnet:"Neodyum Mıknatıs Ø20",
+    ct:"Tezgah Tablası", ctNone:"Yok", ctMasif:"Masif", ctPly:"Kontrplak",
+    ctThick:"Tabla Kalınlığı", ctOverF:"Taşma — Ön", ctOverB:"Taşma — Arka", ctOverL:"Taşma — Sol", ctOverR:"Taşma — Sağ",
+    ctRad:"Tabla Köşe Radiusu", ctRadFront:"Sadece Ön", ctRadAll:"4 Köşe", pTabla:"Tezgah Tablası",
+    modules:"Modül", wheels:"Taban", wheelsNone:"Yok", wheelsFixed:"Frensiz", wheelsBrake:"Frenli",
+    wheelColor:"Kauçuk Rengi", pWheel:"Tekerlek (Ø75)", pFoot:"Ayak (Ø50)", colBlack:"Siyah", colGray:"Gri",
+    wheelsFeet:"Ayak", advanced:"Gelişmiş Özelleştirme",
+    orderSummary:"Sipariş Özeti", partsList:"Parça Listesi", total:"Toplam",
+    production:"Üretim Dosyaları",
+    prodDesc:"Tasarımınız parmak geçmeli (comb-joint) panel sistemine çevrilir. DXF dosyaları CNC'ye hazırdır; PDF föyde ölçüler, parça listesi ve montaj şeması bulunur.",
+    dlDxf:"DXF Kesim Dosyalarını İndir", dlPdf:"PDF Föyü İndir", placeOrder:"Siparişi Tamamla",
+    prodNote:"Üretim süresi: 5–7 iş günü. Vidasız geçme sistem — montaj için alet gerekmez. Kargo Türkiye geneli ücretsizdir.",
+    part:"Parça", qty:"Adet", size:"Ölçü (mm)",
+    pSide:"Yan Panel", pTop:"Üst Panel", pBottom:"Alt Panel", pShelf:"Raf", pBack:"Arkalık", pDoor:"Kapak", pPlate:"Önlük Paneli", pFrame:"Radius Çerçeve",
+    cat:"Mekân", model:"Model", dims:"Ölçüler", mat:"Malzeme", thick:"Kalınlık", shelfCount:"Raf",
+    yes:"Var", no:"Yok",
+    footerQuote:"Weniger, aber besser — Dieter Rams",
+    thanksTitle:"Teşekkürler", thanksBody:"Bu bir prototiptir. Gerçek sistemde sipariş üretim kuyruğuna düşer ve e-posta ile bilgilendirilirsiniz.", close:"Kapat",
+    parts:"parça", panels:"panel", area:"m² levha",
+    solutions:"çözüm",
+  },
+  en:{
+    tagline:"Atelier — Shelving & Counters",
+    step0:"Product", step2:"Customise", step3:"Production", chooseProduct:"Choose one of two systems", frame:"Radius Frame", frameRad:"Frame Radius", noframe:"—", pFrame:"Radius Frame",
+    heroTitle:"Two systems, <strong>infinite sizes.</strong>",
+    heroSub:"A focused tool for architects: open shelving units and kitchen counters. Enter dimensions, get CNC-ready files.",
+    step0:"Space", step1:"Model", step2:"Customise", step3:"Production",
+    back:"← Spaces", backCfg:"← Customise", modelSub:"General-purpose solution types. All fully customisable.",
+    width:"Width", height:"Height", depth:"Depth", shelves:"Shelves",
+    material:"Material", thickness:"Thickness", backPanel:"Back Panel", doors:"Doors",
+    estPrice:"Estimated Price", next:"Next →", dragHint:"Drag: rotate · Scroll: zoom",
+    windows:"Window Cutouts", explode:"Exploded View",
+    front:"Front", frontOpen:"Open", frontPlate:"Radius Fascia",
+    backNone:"None", backSolid:"Solid", backWindow:"Windowed",
+    doorNone:"None", doorSingle:"Single", doorDouble:"Double",
+    doorColor:"Door Colour", designs:"designs", outerRadius:"Outer Radius",
+    frameW:"Frame Width", edgeRound:"Edge Radius",
+    capMode:"Cap Construction", capInset:"Inset", capOverlay:"Overlay",
+    winRad:"Window Radius", plateStyle:"Fascia Pattern",
+    psWindow:"Window", psSlats:"Channel", psSlots:"Slots", psHoles:"Perforated",
+    doorSlide:"Sliding",
+    ventSurf:"Vent Surfaces", vTop:"Top", vSide:"Side", vBottom:"Bottom", vCT:"Countertop",
+    ventDir:"Slot Direction", dirH:"Horizontal", dirV:"Vertical",
+    ventLen:"Slot Length", ventW:"Slot Width", ventStagger:"Staggered Layout",
+    divider:"Heat Baffle (parallel to radiator)", dividerPos:"Baffle Depth", pDivider:"Heat Baffle",
+    vDoor:"Door", ctGroove:"Grooved Top (no top cap)", noBottom:"No Bottom Cap",
+    pegStyle:"Pattern", pegHoles:"Holes", pegSlots:"Slots", pegD:"Hole Diameter", pegPitch:"Pitch",
+    pPeg:"Board", pCleat:"Hidden Cleat", pBar:"Bar (Solid Face)", pMagnet:"Neodymium Magnet Ø20",
+    ct:"Countertop", ctNone:"None", ctMasif:"Solid Wood", ctPly:"Plywood",
+    ctThick:"Top Thickness", ctOverF:"Overhang — Front", ctOverB:"Overhang — Back", ctOverL:"Overhang — Left", ctOverR:"Overhang — Right",
+    ctRad:"Top Corner Radius", ctRadFront:"Front Only", ctRadAll:"All 4", pTabla:"Countertop",
+    modules:"Modules", wheels:"Base", wheelsNone:"None", wheelsFixed:"Standard", wheelsBrake:"Braked",
+    wheelColor:"Rubber Colour", pWheel:"Castor (Ø75)", pFoot:"Foot (Ø50)", colBlack:"Black", colGray:"Grey",
+    wheelsFeet:"Feet", advanced:"Advanced Customisation",
+    orderSummary:"Order Summary", partsList:"Parts List", total:"Total",
+    production:"Production Files",
+    prodDesc:"Your design is converted to a comb-jointed panel system. DXF files are CNC-ready; the PDF sheet contains dimensions, parts list and assembly diagram.",
+    dlDxf:"Download DXF Cutting Files", dlPdf:"Download PDF Sheet", placeOrder:"Place Order",
+    prodNote:"Production time: 5–7 working days. Screwless joinery — no tools needed for assembly. Free shipping across Turkey.",
+    part:"Part", qty:"Qty", size:"Size (mm)",
+    pSide:"Side Panel", pTop:"Top Panel", pBottom:"Bottom Panel", pShelf:"Shelf", pBack:"Back Panel", pDoor:"Door", pPlate:"Fascia Panel", pFrame:"Radius Frame",
+    cat:"Space", model:"Model", dims:"Dimensions", mat:"Material", thick:"Thickness", shelfCount:"Shelves",
+    yes:"Yes", no:"No",
+    footerQuote:"Weniger, aber besser — Dieter Rams",
+    thanksTitle:"Thank you", thanksBody:"This is a prototype. In production, your order enters the manufacturing queue and you are notified by e-mail.", close:"Close",
+    parts:"parts", panels:"panels", area:"m² sheet",
+    solutions:"solutions",
+  }
+};
+
+/* Tasarım yardımcısı: icon, isimler, preset */
+const D_ = (icon,tr,en,p)=>({icon,tr,en,p});
+
+const CATS = [
+  {id:"raf", tr:"Raf Ünitesi", en:"Shelving Unit", designs:[
+    D_("open","Raf Ünitesi","Shelving Unit",{w:900,h:1800,d:320,shelves:4,product:"raf",backMode:"window",frontMode:"open",frame:true,frameRad:24,wheels:"none"}),
+  ]},
+  {id:"counter", tr:"Mutfak Tezgahı", en:"Kitchen Counter", designs:[
+    D_("counter","Mutfak Tezgahı","Kitchen Counter",{w:1200,h:900,d:600,shelves:2,product:"counter",backMode:"solid",frontMode:"open",frame:false,ct:"masif",ctT:30,ctOverF:25,ctOverB:0,ctOverL:25,ctOverR:25,ctRadMode:"front",ctRad:8,wheels:"feet"}),
+  ]},
+];
+
+const MATS = [
+  {id:"mdf",   tr:"MDF Lake — Beyaz", en:"MDF Lacquer — White", color:0xf2f0eb, sw:"#f2f0eb", pricePerM2:950},
+  {id:"birch", tr:"Huş Kontrplak",    en:"Birch Plywood",       color:0xd9c49a, sw:"#d9c49a", pricePerM2:1900},
+  {id:"black", tr:"MDF Lake — Siyah", en:"MDF Lacquer — Black", color:0x1c1c1c, sw:"#1c1c1c", pricePerM2:1100},
+  {id:"fenolik",tr:"Fenolik Film",    en:"Phenolic Film",       color:0x4a3526, sw:"#4a3526", pricePerM2:1600},
+];
+
+const DOORMATS = MATS.concat([
+  {id:"glass", tr:"Cam (Temperli)", en:"Glass (Tempered)", color:0x9fb8bd, sw:"#bcd4d8", pricePerM2:2800}
+]);
+const THICKS = [6,8,12,18,24];
+const CNC_FEE = 450;          // sabit işleme bedeli
+const SHIP = 0;               // ücretsiz kargo
+
+/* ============================== STATE ============================== */
+let lang = "tr";
+let state = {
+  cat:null, design:null, icon:null,
+  w:800, h:1800, d:350, shelves:4,
+  mat:"mdf", doorMat:"mdf", t:18,
+  backMode:"window", frontMode:"open", doorType:"none", enc:false,
+  windows:true, explode:false, rad:0, frameW:60, edgeR:3,
+  product:"raf", frame:true, frameRad:24,
+  ct:"none", ctT:30, ctOverF:30, ctOverB:0, ctOverL:30, ctOverR:30, ctRad:12, ctRadMode:"front", capMode:"inset",
+  plateStyle:"window", winRad:55,
+  ventTop:false, ventSides:false, ventBottom:false, ventCT:false,
+  ventDir:"h", ventLen:150, ventW:8, ventStagger:true,
+  divider:false, dividerPos:50, ventDoors:false, ctGroove:false, noBottom:false,
+  flat:null, pegStyle:"holes", pegD:10, pegPitch:48,
+  modules:1, moduleDir:"x", wheels:"none", wheelCol:"black",
+};
+const DESIGN_DEFAULTS = {shelves:0, backMode:"window", frontMode:"open", doorType:"none", enc:false, modules:1, moduleDir:"x", wheels:"none", ct:"none", ctOverF:30, ctOverB:0, ctOverL:30, ctOverR:30, ctRadMode:"front", plateStyle:"window", product:"raf", frame:false,
+  ventTop:false, ventSides:false, ventBottom:false, ventCT:false, ventDoors:false, divider:false, ctGroove:false, noBottom:false, flat:null};
+let maxStep = 0;
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const t  = k => I18N[lang][k] || k;
+const fmt = n => n.toLocaleString(lang==="tr"?"tr-TR":"en-US");
+
+/* ============================================================
+   ZMANO JOINT ENGINE — frame_final.py portu
+   Parmak geçme (comb-joint) + yuvarlak pencere + dogbone.
+   ERKEK paneller faz 0 (diş ile başlar), DİŞİ paneller faz 1.
+   Nominal ölçüler iç gövdedir; dişler her yöne T taşar,
+   komşu panelin diş boşluklarını doldurur.
+   ============================================================ */
+const TOOTH = 152, TOOL_R = 3;
+const NFor = L => Math.max(2, Math.round(L/TOOTH));
+
+function combEdge(S, E, nrm, T, N, phase){
+  if(phase===null) return [S, E];                       // düz kenar
+  const L = Math.hypot(E[0]-S[0], E[1]-S[1]);
+  const ux=(E[0]-S[0])/L, uy=(E[1]-S[1])/L, nx=nrm[0], ny=nrm[1];
+  const pt=(tt,o)=>[S[0]+ux*tt+nx*o, S[1]+uy*tt+ny*o];
+  const c=L/N; let pts=[], prev=null;
+  for(let i=0;i<N;i++){
+    const o=(i%2===phase)?T:0, t0=i*c, t1=(i+1)*c;
+    if(prev===null) pts.push(pt(t0,o));
+    else if(o!==prev) pts.push(pt(t0,prev), pt(t0,o));
+    pts.push(pt(t1,o)); prev=o;
+  }
+  if(prev!==0) pts.push(pt(L,0));
+  return pts;
+}
+function roundedRectPts(x0,y0,x1,y1,rad,seg=8){
+  const pts=[];
+  [[x1-rad,y0+rad,-90,0],[x1-rad,y1-rad,0,90],[x0+rad,y1-rad,90,180],[x0+rad,y0+rad,180,270]]
+  .forEach(([cx,cy,a0,a1])=>{
+    for(let i=0;i<=seg;i++){
+      const a=(a0+(a1-a0)*i/seg)*Math.PI/180;
+      pts.push([cx+rad*Math.cos(a), cy+rad*Math.sin(a)]);
+    }
+  });
+  return pts;
+}
+function dedupe(pts){
+  const out=[pts[0]];
+  for(let i=1;i<pts.length;i++){
+    const p=pts[i], q=out[out.length-1];
+    if(Math.abs(p[0]-q[0])>1e-6 || Math.abs(p[1]-q[1])>1e-6) out.push(p);
+  }
+  const a=out[0], b=out[out.length-1];
+  if(Math.abs(a[0]-b[0])<1e-6 && Math.abs(a[1]-b[1])<1e-6) out.pop();
+  return out;
+}
+function concaveDogbones(outline, r){
+  const n=outline.length, centers=[];
+  for(let i=0;i<n;i++){
+    const a=outline[(i-1+n)%n], b=outline[i], c=outline[(i+1)%n];
+    const d1=[b[0]-a[0],b[1]-a[1]], d2=[c[0]-b[0],c[1]-b[1]];
+    if(d1[0]*d2[1]-d1[1]*d2[0] < -1e-6) centers.push([b[0],b[1],r]); // iç köşe
+  }
+  return centers;
+}
+function buildPanelZ(w,h,T,ph){
+  /* Parite düzeltmesi: üst/sol kenarlar ters yönde gezilir; diş sayısı ÇİFT ise
+     faz dünya ekseninde kaymasın diye çevrilir — birleşimler her ölçüde tam kapanır. */
+  const Nw=NFor(w), Nh=NFor(h);
+  const adj=(p,N)=> p===null ? null : (N%2===0 ? 1-p : p);
+  let out = [].concat(
+    combEdge([0,0],[w,0],[0,-1],T,Nw, ph.bottom),
+    combEdge([w,0],[w,h],[1,0], T,Nh, ph.right),
+    combEdge([w,h],[0,h],[0,1], T,Nw, adj(ph.top,Nw)),
+    combEdge([0,h],[0,0],[-1,0],T,Nh, adj(ph.left,Nh)));
+  out = dedupe(out);
+  return {outline:out, holes:[], dogbones:concaveDogbones(out,TOOL_R)};
+}
+function windowFor(w,h){
+  const m=Math.min(state.frameW, w*0.3, h*0.3);
+  if(w-2*m<60 || h-2*m<60) return null;
+  const r=Math.min(state.winRad,(w-2*m)/3,(h-2*m)/3);
+  return roundedRectPts(m,m,w-m,h-m,r);
+}
+/* Pencereli panel: rafsızsa tek pencere, raflıysa kafes (raf hizasında şeritler).
+   Önlük VE arkalık için ortak — döndürdüğü değer tek pencere konturudur (kapaklar için). */
+function addFasciaOpenings(fp, W, H, T, ys){
+  const m = Math.min(state.frameW, W*0.3, H*0.3);
+  const rw = Math.min(state.winRad, (W-2*m)/3);
+  if(!ys || ys.length===0){
+    if(W-2*m>60 && H-2*m>60){
+      const win = roundedRectPts(m, m, W-m, H-m, Math.min(rw,(H-2*m)/3));
+      fp.holes.push(win); return win;
+    }
+    return null;
+  }
+  const hb = Math.max(T/2+15, 24);
+  let prev = m; const opens=[];
+  ys.forEach(y=>{ opens.push([prev, y-hb]); prev = y+hb; });
+  opens.push([prev, H-m]);
+  opens.forEach(([y0,y1])=>{
+    if(y1-y0 > 44) fp.holes.push(roundedRectPts(m, y0, W-m, y1, Math.min(rw,(y1-y0)/3)));
+  });
+  return null;
+}
+const rectPath=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+/* Parametrik şerit-delik deseni: radiuslu uçlu kapsül yarıklar,
+   yön/boy/genişlik/şaşırtma ayarlı — ısıyı geçirir, içine bir şey düşmez. */
+function slotHoles(x0,y0,x1,y1){
+  const L=state.ventLen, w=state.ventW, st=state.ventStagger;
+  const gap=24, pitch=w+16, holes=[];
+  if(x1-x0<60 || y1-y0<40) return holes;
+  if(state.ventDir==="h"){
+    let row=0;
+    for(let y=y0; y+w<=y1; y+=pitch){
+      const off=(st&&row%2)?(L+gap)/2:0;
+      for(let x=x0-off; x<x1; x+=L+gap){
+        const xs=Math.max(x,x0), xe=Math.min(x+L,x1);
+        if(xe-xs>34) holes.push(roundedRectPts(xs,y,xe,y+w,Math.min(w/2,(xe-xs)/3)));
+      }
+      row++;
+    }
+  }else{
+    let col=0;
+    for(let x=x0; x+w<=x1; x+=pitch){
+      const off=(st&&col%2)?(L+gap)/2:0;
+      for(let y=y0-off; y<y1; y+=L+gap){
+        const ys=Math.max(y,y0), ye=Math.min(y+L,y1);
+        if(ye-ys>34) holes.push(roundedRectPts(x,ys,x+w,ye,Math.min(w/2,(ye-ys)/3)));
+      }
+      col++;
+    }
+  }
+  return holes;
+}
+function circlePts(cx,cy,r,seg=14){
+  const pts=[];
+  for(let i=0;i<seg;i++){ const a=2*Math.PI*i/seg; pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]); }
+  return pts;
+}
+
+/* Düz kenara dışa çıkan zıvana dişleri ekler */
+function tabbedEdge(S,E,nrm,T,bands){
+  const L=Math.hypot(E[0]-S[0],E[1]-S[1]);
+  const ux=(E[0]-S[0])/L, uy=(E[1]-S[1])/L, nx=nrm[0], ny=nrm[1];
+  const pt=(tt,o)=>[S[0]+ux*tt+nx*o, S[1]+uy*tt+ny*o];
+  const pts=[pt(0,0)];
+  bands.forEach(([b0,b1])=>pts.push(pt(b0,0),pt(b0,T),pt(b1,T),pt(b1,0)));
+  pts.push(pt(L,0));
+  return pts;
+}
+/* Raf: yanlara her zaman, öne (önlük şeridi) ve arkaya (kapalı arkalık) opsiyonel geçme */
+function buildShelfZ(W,D,T,sideBands,wBands,frontTab,backTab){
+  const rev=(bands,L)=>bands.map(b=>[L-b[1],L-b[0]]).reverse();
+  let pts=[].concat(
+    tabbedEdge([0,0],[W,0],[0,-1],T, frontTab? wBands:[]),
+    tabbedEdge([W,0],[W,D],[1,0],T, sideBands),
+    tabbedEdge([W,D],[0,D],[0,1],T, backTab? rev(wBands,W):[]),
+    tabbedEdge([0,D],[0,0],[-1,0],T, rev(sideBands,D)));
+  const out=dedupe(pts);
+  return {outline:out, holes:[], dogbones:concaveDogbones(out,TOOL_R)};
+}
+function buildDoorZ(w,h,vent,r=10){
+  const out=roundedRectPts(0,0,w,h,Math.min(r,w/3,h/3));
+  const holes=[];
+  if(vent){ const wd=windowFor(w,h); if(wd) holes.push(wd); }
+  return {outline:out, holes, dogbones:[]};
+}
+/* İmza dış radius: outline'da verilen köşe noktasını güvenli yarıçapla yuvarlar.
+   Komşu segment uzunluklarına göre otomatik kısıtlanır (dişlere zarar vermez). */
+function filletAt(outline, px, py, r, eps=0.6){
+  if(r<=0) return outline;
+  const n = outline.length;
+  const i = outline.findIndex(p=>Math.abs(p[0]-px)<eps && Math.abs(p[1]-py)<eps);
+  if(i<0) return outline;
+  const a=outline[(i-1+n)%n], b=outline[i], c=outline[(i+1)%n];
+  const l1=Math.hypot(b[0]-a[0],b[1]-a[1]), l2=Math.hypot(c[0]-b[0],c[1]-b[1]);
+  if(l1<1e-6||l2<1e-6) return outline;
+  const d1=[(b[0]-a[0])/l1,(b[1]-a[1])/l1], d2=[(c[0]-b[0])/l2,(c[1]-b[1])/l2];
+  const cross=d1[0]*d2[1]-d1[1]*d2[0];
+  if(Math.abs(cross)<1e-4) return outline;                    // düz — gerek yok
+  const dot=Math.max(-1,Math.min(1,d1[0]*d2[0]+d1[1]*d2[1]));
+  const theta=Math.acos(dot);
+  let tt=Math.min(r*Math.tan(theta/2), l1*0.9, l2*0.9);       // güvenli sınır
+  const rr=tt/Math.tan(theta/2);
+  const p1=[b[0]-d1[0]*tt, b[1]-d1[1]*tt], p2=[b[0]+d2[0]*tt, b[1]+d2[1]*tt];
+  const s=Math.sign(cross);
+  const ctr=[p1[0]-d1[1]*rr*s, p1[1]+d1[0]*rr*s];
+  const a0=Math.atan2(p1[1]-ctr[1], p1[0]-ctr[0]);
+  const a1=Math.atan2(p2[1]-ctr[1], p2[0]-ctr[0]);
+  let sweep=a1-a0;
+  if(s>0) while(sweep<0) sweep+=2*Math.PI;
+  else    while(sweep>0) sweep-=2*Math.PI;
+  const seg=6, arc=[];
+  for(let k=0;k<=seg;k++){
+    const aa=a0+sweep*k/seg;
+    arc.push([ctr[0]+rr*Math.cos(aa), ctr[1]+rr*Math.sin(aa)]);
+  }
+  return [...outline.slice(0,i), ...arc, ...outline.slice(i+1)];
+}
+/* Birden çok aday köşeyi dener (diş paritesine göre köşe konumu değişebilir) */
+function filletCorners(panel, corners, r){
+  corners.forEach(cands=>{
+    for(const [x,y] of cands){
+      const before=panel.outline.length;
+      panel.outline=filletAt(panel.outline, x, y, r);
+      if(panel.outline.length!==before) break;
+    }
+  });
+}
+
+/* Tüm içbükey köşeleri yuvarlar — bevel'in kendi kendine kesişmesini önler,
+   üretimde de iç köşeler zaten takım yarıçapıyla yuvarlanır */
+function filletConcaveAll(outline, r){
+  const n=outline.length, targets=[];
+  for(let i=0;i<n;i++){
+    const a=outline[(i-1+n)%n], b=outline[i], c=outline[(i+1)%n];
+    const d1=[b[0]-a[0],b[1]-a[1]], d2=[c[0]-b[0],c[1]-b[1]];
+    if(d1[0]*d2[1]-d1[1]*d2[0] < -1e-6) targets.push([b[0],b[1]]);
+  }
+  let out=outline;
+  targets.forEach(tg=>{ out=filletAt(out, tg[0], tg[1], r); });
+  return out;
+}
+
+/* Kapak kanadına havalandırma şeritleri (cam hariç) */
+function ventilateDoor(p){
+  if(!state.ventDoors || state.doorMat==="glass") return;
+  const bb=bboxOf(p.outline);
+  p.holes.push(...slotHoles(bb[0]+36, bb[1]+36, bb[2]-36, bb[3]-36));
+}
+
+/* Köşe yarıçapları ayrı ayrı verilebilen yuvarlatılmış dikdörtgen
+   rs = [sağalt, sağüst, solüst, solalt] */
+function roundedRectMulti(x0,y0,x1,y1,rs,seg=8){
+  const cs=[[x1-rs[0],y0+rs[0],-90,0,rs[0]],[x1-rs[1],y1-rs[1],0,90,rs[1]],
+            [x0+rs[2],y1-rs[2],90,180,rs[2]],[x0+rs[3],y0+rs[3],180,270,rs[3]]];
+  const pts=[];
+  cs.forEach(([cx,cy,a0,a1,r])=>{
+    for(let i=0;i<=seg;i++){
+      const a=(a0+(a1-a0)*i/seg)*Math.PI/180;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+  });
+  return pts;
+}
+
+/* Köşe küpü dolgusu (bindirmeli mod): diş ucu yüzeyini T kadar dışarı iter.
+   Yüz (A→B ardışık köşe çifti) outline'da yoksa no-op — sahiplik kendiliğinden seçilir. */
+function bumpFace(outline, A, B, d){
+  const eq=(p,q)=>Math.abs(p[0]-q[0])<0.5 && Math.abs(p[1]-q[1])<0.5;
+  const n=outline.length;
+  for(let i=0;i<n;i++){
+    const j=(i+1)%n;
+    if(eq(outline[i],A) && eq(outline[j],B)){
+      return [...outline.slice(0,i+1), [A[0]+d[0],A[1]+d[1]], [B[0]+d[0],B[1]+d[1]], ...outline.slice(j)];
+    }
+  }
+  return outline;
+}
+function despike(outline){
+  let out=outline.slice(), changed=true;
+  const eq=(p,q)=>Math.abs(p[0]-q[0])<0.05 && Math.abs(p[1]-q[1])<0.05;
+  while(changed && out.length>4){
+    changed=false;
+    for(let i=0;i<out.length;i++){
+      const n=out.length, a=out[(i-1+n)%n], c=out[(i+1)%n];
+      if(eq(a,c)){
+        if(i+1<out.length){ out.splice(i,2); } else { out.splice(i,1); out.splice(0,1); }
+        changed=true; break;
+      }
+    }
+  }
+  return dedupe(out);
+}
+
+/* Ürünü panellere çevirir: outline + delikler + 3D yerleşim */
+function buildUnitPanels(){
+  const {w:W,h:H,d:D,t:T,shelves:NS} = state;
+
+  /* ===== FLAT ÜRÜNLER — geçme motoru kullanmaz ===== */
+  if(state.flat==="pegboard"){
+    /* Pegboard: delik/şerit desenli pano + GİZLİ Fransız askı çıtası (önden vida yok) */
+    const p={outline:roundedRectPts(0,0,W,H,12), holes:[], dogbones:[], grooves:[]};
+    if(state.pegStyle==="slots"){
+      p.holes.push(...slotHoles(40, 40, W-40, H-40));
+    }else{
+      const dh=state.pegD, pitch=state.pegPitch;
+      let row=0;
+      for(let y=44; y<=H-44; y+=pitch){
+        const off=(state.ventStagger && row%2) ? pitch/2 : 0;
+        for(let x=44+off; x<=W-44; x+=pitch) p.holes.push(circlePts(x,y,dh/2));
+        row++;
+      }
+    }
+    /* Arka yüz: çıta oturma kanalları (pocket) */
+    p.grooves.push(rectPath(36, H-64, W-36, H-44), rectPath(36, 44, W-36, 64));
+    const cl={outline:roundedRectPts(0,0,W-90,52,6), holes:[], dogbones:[]};
+    return [
+      {key:"pPeg", qty:1, panel:p, place:[{rot:null, pos:[-W/2,0,0], n:[0,0,1]}]},
+      {key:"pCleat", qty:2, panel:cl, place:[
+        {rot:null, pos:[-(W-90)/2, H-110, -T-1], n:[0,0,-1]},
+        {rot:null, pos:[-(W-90)/2, 50,    -T-1], n:[0,0,-1]}]},
+    ];
+  }
+  if(state.flat==="knifebar"){
+    /* Manyetik çubuk: ön yüz dümdüz masif; mıknatıs cepleri ve anahtar-deliği
+       askılar ARKADAN frezelenir — önden hiçbir vida/bağlantı görünmez */
+    const p={outline:roundedRectPts(0,0,W,H,Math.min(10,H/4)), holes:[], dogbones:[], grooves:[]};
+    const nMag=Math.max(2, Math.floor((W-80)/45));
+    for(let i=0;i<nMag;i++){
+      const x = 40 + (W-80)*i/(nMag-1);
+      p.grooves.push(circlePts(x, H/2, 10.2));      // Ø20.4 cep, 4mm et kalır
+    }
+    p.grooves.push(circlePts(32, H/2, 4.5), circlePts(W-32, H/2, 4.5)); // keyhole askı
+    return [{key:"pBar", qty:1, panel:p, place:[{rot:null, pos:[-W/2,0,0], n:[0,0,1]}]}];
+  }
+  /* ===== KUTU ÜRÜNLER (geçme motoru) ===== */
+  const enc = !!state.enc;
+  const hasBack = state.backMode!=="none";
+  const hasPlate = state.frontMode==="plate";
+  const hasFrame = !!state.frame;                     // RAF: radius çerçeve (cage YOK)
+  const win = state.windows;
+  const out=[];
+
+  const tabL = Math.min(130, D*0.3);
+  const bands = [[D*0.16, D*0.16+tabL],[D*0.84-tabL, D*0.84]];
+  const tabW = Math.min(130, W*0.25);
+  const wBands = [[W*0.18, W*0.18+tabW],[W*0.82-tabW, W*0.82]];
+  const ys=[]; for(let i=1;i<=NS;i++) ys.push(H*i/(NS+1));
+  const slotInto = (panel,b0,y0,b1,y1)=>{
+    panel.holes.push(rectPath(b0,y0,b1,y1));
+    [[b0,y0],[b1,y0],[b1,y1],[b0,y1]].forEach(c=>panel.dogbones.push([c[0],c[1],TOOL_R]));
+  };
+
+  const inset = state.capMode==="inset";
+  const noTop = inset && state.ct!=="none" && state.ctGroove;   // tabla üst kapağın yerine kanalla oturur
+  const noBot = inset && state.noBottom;                          // alt kapak yok (zemin açık — ısı dolaşımı)
+  const capYs = inset ? [].concat(noBot?[]:[T/2], noTop?[]:[H-T/2]) : [];
+
+  // YANAKLAR (DİŞİ) — raf ve (inset modda) kapak yuvaları yanaklara açılır
+  const side = buildPanelZ(D,H,T,{bottom:inset?null:0, top:inset?null:0, left:(hasPlate||hasFrame)?1:null, right:hasBack?1:null});
+  if(!inset){
+    /* Bindirmeli mod: 3 bantlı köşe küplerini sahibi dişin uzantısıyla doldur */
+    if(hasBack){
+      side.outline = bumpFace(side.outline, [D,H],[D,H+T],[T,0]);
+      side.outline = bumpFace(side.outline, [D,-T],[D,0],[T,0]);
+    }
+    if(hasPlate){
+      side.outline = bumpFace(side.outline, [0,H+T],[0,H],[-T,0]);
+      side.outline = bumpFace(side.outline, [0,0],[0,-T],[-T,0]);
+    }
+    side.outline = despike(side.outline);
+    side.dogbones = concaveDogbones(side.outline, TOOL_R);
+  }
+  if(state.ventSides){
+    const su0 = NS>0 ? D*0.28 : 36, su1 = NS>0 ? D*0.72 : D-36;
+    side.holes.push(...slotHoles(su0, 40, su1, H-40));
+  }else if(win && NS===0){ const wd=windowFor(D,H); if(wd) side.holes.push(wd); }
+  capYs.forEach(y=>bands.forEach(b=>{
+    side.holes.push(rectPath(b[0],y-T/2,b[1],y+T/2));
+    [[b[0],y-T/2],[b[1],y-T/2],[b[1],y+T/2],[b[0],y+T/2]]
+      .forEach(c=>side.dogbones.push([c[0],c[1],TOOL_R]));
+  }));
+  ys.forEach(y=>bands.forEach(b=>{
+    side.holes.push(rectPath(b[0],y-T/2,b[1],y+T/2));
+    [[b[0],y-T/2],[b[1],y-T/2],[b[1],y+T/2],[b[0],y+T/2]]
+      .forEach(c=>side.dogbones.push([c[0],c[1],TOOL_R]));
+  }));
+  /* İmza dış radius — ön çerçeve köşeleri */
+  const R = state.rad;
+  if(R>0) filletCorners(side, [[[0,-T],[0,0]], [[0,H+T],[0,H]]], R);
+  out.push({key:"pSide", qty:2, panel:side, place:[
+    {rot:["Y",Math.PI/2], pos:[-W/2-T,0,D/2], n:[-1,0,0]},
+    {rot:["Y",Math.PI/2], pos:[ W/2,  0,D/2], n:[ 1,0,0]},
+  ]});
+
+  // KAPAKLAR — üst/alt ayrı üretilir (farklı havalandırma desenleri için)
+  const mkCap = ()=>{
+    let c;
+    if(inset){
+      c = buildShelfZ(W,D,T,bands,wBands,hasPlate,hasBack);
+    }else{
+      c = buildPanelZ(W,D,T,{bottom:hasPlate?1:null,right:1,top:hasBack?1:null,left:1});
+      if(hasBack){
+        c.outline = bumpFace(c.outline, [0,D],[-T,D],[0,T]);
+        c.outline = bumpFace(c.outline, [W+T,D],[W,D],[0,T]);
+        c.outline = despike(c.outline);
+        c.dogbones = concaveDogbones(c.outline, TOOL_R);
+      }
+    }
+    if(win && enc){ const wd=windowFor(W,D); if(wd) c.holes.push(wd); }
+    return c;
+  };
+  const capT = mkCap(), capB = mkCap();
+  // havalandırma: maksimum alan (kenardan 30mm), oluk ve ayraç bölgelerinden kaçınır
+  const vd = D*state.dividerPos/100;     // ayraç: kalorifere PARALEL, derinlik konumu
+  const capVent = (c)=>{
+    let v0 = 30;
+    if(state.doorType==="slide" && !hasPlate) v0 = Math.max(v0, 2*T+16);
+    if(state.divider){
+      c.holes.push(...slotHoles(30, v0, W-30, vd-T/2-14));
+      c.holes.push(...slotHoles(30, vd+T/2+14, W-30, D-30));
+    }else{
+      c.holes.push(...slotHoles(30, v0, W-30, D-30));
+    }
+  };
+  if(state.ventTop && !noTop) capVent(capT);
+  if(state.ventBottom)        capVent(capB);
+  // ısı ayracı yuvaları — şerit genişlik bantları boyunca, ayraç derinliğinde
+  if(state.divider){
+    [capT,capB].forEach(c=>wBands.forEach(b=>{
+      c.holes.push(rectPath(b[0],vd-T/2,b[1],vd+T/2));
+      [[b[0],vd-T/2],[b[1],vd-T/2],[b[1],vd+T/2],[b[0],vd+T/2]].forEach(q=>c.dogbones.push([q[0],q[1],TOOL_R]));
+    }));
+  }
+  // sürgü kapak olukları — kapakların içine frezelenir (GROOVE/pocket katmanı)
+  if(state.doorType==="slide" && !hasPlate){
+    const g=[rectPath(10, 3, W-10, 5+T), rectPath(10, 9+T, W-10, 11+2*T)];
+    [capT,capB].forEach(c=>{ c.grooves=(c.grooves||[]).concat(g); });
+  }
+  if(!noTop) out.push({key:"pTop", qty:1, panel:capT, place:[{rot:["X",-Math.PI/2], pos:[-W/2, inset?H-T:H,  D/2], n:[0,1,0]}]});
+  if(!noBot) out.push({key:"pBottom", qty:1, panel:capB, place:[{rot:["X",-Math.PI/2], pos:[-W/2, inset?0:-T, D/2], n:[0,-1,0]}]});
+
+  // ISI AYRACI — kalorifere PARALEL dikey panel: arka (radyatör) bölmeyi
+  // ön (dolap) bölmeden yalıtır; üst/alt kapaklara zıvana ile oturur
+  if(state.divider){
+    const Hd = inset ? H-2*T : H;
+    const rev=(bb,L)=>bb.map(b=>[L-b[1],L-b[0]]).reverse();
+    let dp=[].concat(
+      tabbedEdge([0,0],[W,0],[0,-1],T, noBot ? [] : wBands),
+      tabbedEdge([W,0],[W,Hd],[1,0],T,[]),
+      tabbedEdge([W,Hd],[0,Hd],[0,1],T, noTop ? [] : rev(wBands,W)),
+      tabbedEdge([0,Hd],[0,0],[-1,0],T,[]));
+    const dvp={outline:dedupe(dp), holes:[], dogbones:[]};
+    dvp.dogbones=concaveDogbones(dvp.outline,TOOL_R);
+    out.push({key:"pDivider", qty:1, panel:dvp,
+      place:[{rot:null, pos:[-W/2, inset?T:0, D/2-vd-T/2], n:[0,0,0]}]});
+  }
+
+  // ARKALIK (ERKEK — faz 0): kapalı veya pencereli; raflar arkalığa da geçer.
+  // Pencereli + raflı: önlük gibi KAFES (şeritler raf hizasında, mukavemet artar).
+  const backTabs = hasBack && NS>0;
+  if(hasBack){
+    const bk = buildPanelZ(W,H,T,{bottom:inset?null:0,right:0,top:inset?null:0,left:0});
+    if(state.backMode==="window") addFasciaOpenings(bk, W, H, T, ys);
+    if(backTabs) ys.forEach(y=>wBands.forEach(b=>slotInto(bk,b[0],y-T/2,b[1],y+T/2)));
+    capYs.forEach(y=>wBands.forEach(b=>slotInto(bk,b[0],y-T/2,b[1],y+T/2)));
+    out.push({key:"pBack", qty:1, panel:bk, place:[{rot:null, pos:[-W/2,0,-D/2-T], n:[0,0,-1]}]});
+  }
+
+  // RADIUS ÇERÇEVE (RAF için): tek büyük radiuslu açıklık — siper/önlük şeridi YOK,
+  // raflar yanaklara geçer, önden sadece yuvarlak köşeli çerçeve görünür.
+  if(hasFrame){
+    const fr = buildPanelZ(W,H,T,{bottom:0,right:0,top:0,left:0});
+    const m = Math.min(state.frameW, W*0.32, H*0.18);
+    if(W-2*m>80 && H-2*m>80){
+      const r = Math.min(state.frameRad, (W-2*m)/3, (H-2*m)/6);
+      fr.holes.push(roundedRectPts(m, m, W-m, H-m, r));
+    }
+    out.push({key:"pFrame", qty:1, panel:fr, place:[{rot:null, pos:[-W/2,0,D/2], n:[0,0,1]}]});
+  }
+
+  // RADIUS ÖNLÜK (ERKEK — imza ön panel)
+  // Rafsız: tek pencere. Raflı: raf başına şerit (kafes) — her açıklık radiuslu,
+  // raflar şeritlere önden zıvana ile geçer (mukavemet + imza).
+  let plateWin = null;
+  if(hasPlate){
+    const fp = buildPanelZ(W,H,T,{bottom:inset?null:0,right:0,top:inset?null:0,left:0});
+    capYs.forEach(y=>wBands.forEach(b=>slotInto(fp,b[0],y-T/2,b[1],y+T/2)));
+    if(NS===0){
+      const m2 = Math.min(state.frameW, W*0.3, H*0.3);
+      if(state.plateStyle==="holes"){
+        /* Perfore desen: ısıyı geçirir, parmak girmez (Ø26) — radyatör kaseti */
+        const hr=13, pitch=55, rowH=48;
+        let row=0;
+        for(let yy=m2+28; yy<=H-m2-hr-8; yy+=rowH){
+          const off=(row%2)?pitch/2:0;
+          for(let xx=m2+28+off; xx<=W-m2-hr-8; xx+=pitch) fp.holes.push(circlePts(xx,yy,hr));
+          row++;
+        }
+      }else if(state.plateStyle==="slots"){
+        fp.holes.push(...slotHoles(m2, m2, W-m2, H-m2));
+      }else if(state.plateStyle==="slats"){
+        /* Şeritli desen: yatay hava kanalları — ısı akışı için en verimli */
+        const inner=H-2*m2;
+        const n=Math.max(2, Math.round(inner/146));
+        const ysSlat=[]; for(let i=1;i<n;i++) ysSlat.push(m2+inner*i/n);
+        addFasciaOpenings(fp, W, H, T, ysSlat);
+      }else{
+        plateWin = addFasciaOpenings(fp, W, H, T, []);
+      }
+    }else{
+      addFasciaOpenings(fp, W, H, T, ys);
+      ys.forEach(y=>wBands.forEach(b=>slotInto(fp,b[0],y-T/2,b[1],y+T/2)));
+    }
+    out.push({key:"pPlate", qty:1, panel:fp, place:[{rot:null, pos:[-W/2,0,D/2], n:[0,0,1]}]});
+  }
+
+  // RAFLAR — yanaklara her zaman, önlük şeritlerine ve kapalı arkalığa da geçer
+  if(NS>0){
+    const sh = buildShelfZ(W,D,T,bands,wBands,hasPlate,backTabs);
+    if(R>0 && !hasPlate) filletCorners(sh, [[[0,0]], [[W,0]]], R);
+    out.push({key:"pShelf", qty:NS, panel:sh,
+      place:ys.map(y=>({rot:["X",-Math.PI/2], pos:[-W/2,y-T/2,D/2], n:[0,0,0]}))});
+  }
+
+  // KAPAKLAR (kafesli önlükte devre dışı; sürgü her modda çalışır)
+  if(state.doorType==="slide"){
+    /* Sürgülü kapaklar: önlük yoksa kapaklardaki OLUKLARDA içeride kayar;
+       önlük varsa önlüğün önünde ray üstünde çalışır */
+    if(!hasPlate){
+      const dh2=(inset ? H-2*T : H) - 8;
+      const dwS=W/2+12, dy=(inset?T:0)+4;
+      const zf=D/2-T-2, zr=zf-T-4;
+      const dr1=buildDoorZ(dwS,dh2,false,Math.max(10,R));
+      const dr2=buildDoorZ(dwS,dh2,false,Math.max(10,R));
+      ventilateDoor(dr1); ventilateDoor(dr2);
+      out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dr1,
+        place:[{rot:null, pos:[-W/2+2, dy, zr], n:[0,0,0.6]}]});
+      out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dr2,
+        place:[{rot:null, pos:[W/2-dwS-2, dy, zf], n:[0,0,1]}]});
+    }else{
+      const OW=W+2*T, dh=(inset?H:H+2*T)-8, dw=OW/2+14, dy=inset?4:-T+4;
+      const dr1=buildDoorZ(dw,dh,false,Math.max(10,R));
+      const dr2=buildDoorZ(dw,dh,false,Math.max(10,R));
+      ventilateDoor(dr1); ventilateDoor(dr2);
+      out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dr1,
+        place:[{rot:null, pos:[-OW/2+1, dy, D/2+T+2], n:[0,0,1]}]});
+      out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dr2,
+        place:[{rot:null, pos:[OW/2-dw-1, dy, D/2+2*T+4], n:[0,0,1.4]}]});
+    }
+  }
+  else if(state.doorType!=="none"){
+    const dbl = state.doorType==="double";
+    if(hasPlate && plateWin){
+      /* İmza modu: kapaklar radiuslu oyuğun İÇİNDE çalışır, kendileri de radiuslu */
+      const m = Math.min(state.frameW, W*0.3, H*0.3);
+      const r = Math.min(state.winRad, (W-2*m)/3, (H-2*m)/3);
+      const c = 2.5, g = 1.5, ro = Math.max(8, r-c), ri = 8;
+      if(dbl){
+        const dL = {outline:roundedRectMulti(m+c, m+c, W/2-g, H-m-c, [ri,ri,ro,ro]), holes:[], dogbones:[]};
+        const dR = {outline:roundedRectMulti(W/2+g, m+c, W-m-c, H-m-c, [ro,ro,ri,ri]), holes:[], dogbones:[]};
+        ventilateDoor(dL); ventilateDoor(dR);
+        out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dL,
+          place:[{rot:null, pos:[-W/2,0,D/2], n:[0,0,1.8]}]});
+        out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dR,
+          place:[{rot:null, pos:[-W/2,0,D/2], n:[0,0,1.8]}]});
+      }else{
+        const dS = {outline:roundedRectMulti(m+c, m+c, W-m-c, H-m-c, [ro,ro,ro,ro]), holes:[], dogbones:[]};
+        ventilateDoor(dS);
+        out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dS,
+          place:[{rot:null, pos:[-W/2,0,D/2], n:[0,0,1.8]}]});
+      }
+    }else{
+      /* Standart mod: kapaklar dış ön yüzü örter */
+      const dh = (inset ? H : H+2*T) - 4;
+      const dy = inset ? 2 : -T+2;
+      if(dbl){
+        const dw=(W+2*T)/2-2;
+        const dr=buildDoorZ(dw,dh,win&&enc,Math.max(10,R));
+        ventilateDoor(dr);
+        out.push({key:"pDoor", qty:2, matId:state.doorMat, panel:dr, place:[
+          {rot:null, pos:[-W/2-T+1,dy,D/2+2], n:[0,0,1]},
+          {rot:null, pos:[ 1,      dy,D/2+2], n:[0,0,1]},
+        ]});
+      }else{
+        const dr=buildDoorZ(W+2*T-2, dh, win&&enc, Math.max(10,R));
+        ventilateDoor(dr);
+        out.push({key:"pDoor", qty:1, matId:state.doorMat, panel:dr,
+          place:[{rot:null, pos:[-W/2-T+1,dy,D/2+2], n:[0,0,1]}]});
+      }
+    }
+  }
+  return out;
+}
+function bboxOf(pts){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  pts.forEach(p=>{ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); });
+  return [x0,y0,x1,y1];
+}
+
+/* Tabla ölçüleri: yön yön taşmalar (duvara yaslı arka = 0 önerilir) */
+function ctDims(){
+  const T=state.t;
+  const baseW=(state.moduleDir==="x"? state.modules*(state.w+2*T)+(state.modules-1)*4 : state.w+2*T);
+  const baseD=(state.moduleDir==="z"? state.modules*(state.d+2*T)+(state.modules-1)*4 : state.d+2*T);
+  return {baseW, baseD,
+    totW: baseW+state.ctOverL+state.ctOverR,
+    totD: baseD+state.ctOverF+state.ctOverB};
+}
+
+/* ============================== PARTS & PRICE ============================== */
+function computeParts(){
+  const map = new Map();
+  buildUnitPanels().forEach(e=>{
+    const bb=bboxOf(e.panel.outline);
+    const w=Math.round(bb[2]-bb[0]), h=Math.round(bb[3]-bb[1]);
+    const k=`${e.key}|${w}x${h}|${e.matId||""}`;
+    if(map.has(k)) map.get(k).qty += e.qty;
+    else map.set(k, {key:e.key, qty:e.qty, w, h, matId:e.matId});
+  });
+  const parts = [...map.values()].map(p=>({...p, qty:p.qty*state.modules}));
+  if(state.wheels!=="none") parts.push({key:state.wheels==="feet"?"pFoot":"pWheel", qty:4*state.modules, w:0, h:0, hw:true});
+  if(state.flat==="knifebar"){
+    const nMag=Math.max(2, Math.floor((state.w-80)/45));
+    parts.push({key:"pMagnet", qty:nMag, w:0, h:0, hw:true});
+  }
+  if(state.ct!=="none"){
+    const {totW,totD}=ctDims();
+    parts.push({key:"pTabla", qty:1, w:Math.round(totW), h:Math.round(totD), ctp:true, tt:state.ctT});
+  }
+  return parts;
+}
+function computePrice(){
+  let total=0, area=0, count=0;
+  const tf = state.t/18;
+  computeParts().forEach(p=>{
+    if(p.hw){
+      total += p.qty * (p.key==="pMagnet" ? 45 : state.wheels==="brake" ? 260 : state.wheels==="fixed" ? 180 : 60);
+      count += p.qty; return;
+    }
+    if(p.ctp){
+      const a=(p.w/1000)*(p.h/1000); area += a; count += 1;
+      total += a * (state.ct==="masif" ? 3500 : 2200) * (state.ctT/30);
+      return;
+    }
+    const m = DOORMATS.find(x=>x.id===(p.matId||state.mat));
+    const a = p.qty * (p.w/1000) * (p.h/1000);
+    area += a; count += p.qty;
+    total += a * m.pricePerM2 * tf;
+  });
+  return {total: Math.round((total + CNC_FEE + SHIP)/10)*10, area: area.toFixed(2), count};
+}
+
+/* ============================== RENDER: SHELL ============================== */
+const STEP_SEQ = [0,2,3];   // Ürün → Özelleştir → Üretim (model adımı yok)
+function renderSteps(){
+  const el = $("#steps"); el.innerHTML = "";
+  STEP_SEQ.forEach((si,n)=>{
+    const d = document.createElement("div");
+    d.innerHTML = `<b>0${n+1}</b>${t("step"+si)}`;
+    if(si===cur) d.className="active";
+    else if(maxStep>=si && si<cur) { d.className="done"; d.onclick=()=>go(si); }
+    el.appendChild(d);
+  });
+}
+function applyI18n(){
+  $$("[data-i18n]").forEach(e=>e.textContent = t(e.dataset.i18n));
+  $$("[data-i18n-html]").forEach(e=>e.innerHTML = t(e.dataset.i18nHtml));
+}
+
+/* ============================== RENDER: CATEGORIES ============================== */
+function renderCats(){
+  const g = $("#catGrid"); g.innerHTML = "";
+  CATS.forEach((c,i)=>{
+    const dz = c.designs[0];
+    const p = dz.p;
+    const d = document.createElement("div");
+    d.className = "cell";
+    d.style.minHeight = "240px";
+    d.innerHTML = `<span class="idx">${String(i+1).padStart(2,"0")}</span>
+                   ${modelSVG(dz.icon)}
+                   <div><h3>${c[lang]}</h3><div class="sub">${p.w} × ${p.h} × ${p.d} mm</div></div>`;
+    d.onclick = ()=>{ state.cat = c.id; selectDesign(dz); go(2); };
+    g.appendChild(d);
+  });
+}
+
+/* ============================== RENDER: MODELS ============================== */
+function modelSVG(type){
+  // kontekst bazlı minimal çizgi çizimler, 200x160 viewbox
+  const S = {
+    open: `<rect x="55" y="10" width="90" height="140" rx="4"/><line x1="55" y1="45" x2="145" y2="45"/><line x1="55" y1="80" x2="145" y2="80"/><line x1="55" y1="115" x2="145" y2="115"/>`,
+    bookcase: `<rect x="55" y="10" width="90" height="140" rx="4"/><line x1="55" y1="55" x2="145" y2="55"/><line x1="55" y1="100" x2="145" y2="100"/><line x1="68" y1="28" x2="68" y2="55"/><line x1="76" y1="33" x2="76" y2="55"/><line x1="85" y1="25" x2="85" y2="55"/><line x1="93" y1="31" x2="93" y2="55"/><line x1="115" y1="72" x2="115" y2="100"/><line x1="123" y1="78" x2="123" y2="100"/><line x1="132" y1="70" x2="132" y2="100"/>`,
+    cabinet: `<rect x="55" y="15" width="90" height="130" rx="4"/><line x1="100" y1="15" x2="100" y2="145"/><line x1="93" y1="72" x2="93" y2="88"/><line x1="107" y1="72" x2="107" y2="88"/>`,
+    wall: `<rect x="40" y="55" width="120" height="50" rx="4"/><line x1="40" y1="80" x2="160" y2="80"/><line x1="56" y1="55" x2="56" y2="38"/><line x1="144" y1="55" x2="144" y2="38"/>`,
+    low: `<rect x="25" y="75" width="150" height="55" rx="4"/><line x1="75" y1="75" x2="75" y2="130"/><line x1="125" y1="75" x2="125" y2="130"/><line x1="35" y1="130" x2="35" y2="142"/><line x1="165" y1="130" x2="165" y2="142"/>`,
+    corner: `<polyline points="60,150 60,20 100,10 140,20 140,150"/><line x1="60" y1="55" x2="140" y2="55"/><line x1="60" y1="90" x2="140" y2="90"/><line x1="60" y1="125" x2="140" y2="125"/><line x1="100" y1="10" x2="100" y2="150"/>`,
+    enclosure: `<rect x="60" y="15" width="80" height="130" rx="4"/><line x1="72" y1="30" x2="128" y2="30"/><line x1="72" y1="38" x2="128" y2="38"/><line x1="72" y1="46" x2="128" y2="46"/><circle cx="100" cy="95" r="3"/>`,
+    boiler: `<rect x="60" y="15" width="80" height="130" rx="4"/><line x1="72" y1="30" x2="128" y2="30"/><line x1="72" y1="38" x2="128" y2="38"/><path d="M100 85 c-8 10 -8 20 0 26 c8 -6 8 -16 0 -26"/><circle cx="100" cy="122" r="2.5"/>`,
+    plate: `<rect x="55" y="10" width="90" height="140" rx="6"/><rect x="67" y="24" width="66" height="48" rx="12"/><rect x="67" y="88" width="66" height="48" rx="12"/>`,
+    island: `<rect x="28" y="48" width="144" height="12" rx="3"/><rect x="44" y="60" width="112" height="72"/><line x1="44" y1="96" x2="156" y2="96"/><circle cx="62" cy="142" r="7"/><circle cx="138" cy="142" r="7"/>`,
+    counter: `<rect x="36" y="38" width="128" height="12" rx="3"/><rect x="48" y="50" width="104" height="92"/><line x1="48" y1="96" x2="152" y2="96"/>`,
+    tall: `<rect x="70" y="10" width="60" height="140" rx="4"/><line x1="120" y1="72" x2="120" y2="88"/><line x1="76" y1="45" x2="124" y2="45" stroke-dasharray="5 5"/><line x1="76" y1="80" x2="124" y2="80" stroke-dasharray="5 5"/><line x1="76" y1="115" x2="124" y2="115" stroke-dasharray="5 5"/>`,
+    vanity: `<rect x="50" y="72" width="100" height="58" rx="4"/><line x1="100" y1="72" x2="100" y2="130"/><ellipse cx="100" cy="58" rx="30" ry="11"/><line x1="100" y1="36" x2="100" y2="46"/><line x1="90" y1="36" x2="110" y2="36"/>`,
+    mirror: `<rect x="70" y="14" width="60" height="98" rx="8"/><line x1="84" y1="92" x2="116" y2="34"/><line x1="92" y1="98" x2="120" y2="48"/><rect x="70" y="120" width="60" height="22" rx="4"/>`,
+    wmtower: `<rect x="60" y="78" width="80" height="68" rx="4"/><circle cx="100" cy="112" r="22"/><circle cx="100" cy="112" r="14"/><rect x="60" y="10" width="80" height="62" rx="4"/><line x1="60" y1="42" x2="140" y2="42"/>`,
+    tv: `<rect x="28" y="98" width="144" height="42" rx="4"/><line x1="80" y1="98" x2="80" y2="140"/><line x1="120" y1="98" x2="120" y2="140"/><rect x="56" y="32" width="88" height="54" rx="3"/><line x1="86" y1="92" x2="114" y2="92"/>`,
+    coffee: `<rect x="35" y="68" width="130" height="13" rx="3"/><line x1="50" y1="81" x2="50" y2="132"/><line x1="150" y1="81" x2="150" y2="132"/><line x1="50" y1="110" x2="150" y2="110"/>`,
+    gondola: `<line x1="100" y1="18" x2="100" y2="148"/><line x1="40" y1="148" x2="160" y2="148"/><line x1="52" y1="58" x2="100" y2="58"/><line x1="100" y1="58" x2="148" y2="58"/><line x1="46" y1="96" x2="100" y2="96"/><line x1="100" y1="96" x2="154" y2="96"/>`,
+    plant: `<rect x="42" y="92" width="116" height="12" rx="3"/><line x1="56" y1="104" x2="56" y2="144"/><line x1="144" y1="104" x2="144" y2="144"/><polyline points="90,92 93,74 107,74 110,92"/><line x1="100" y1="74" x2="100" y2="54"/><circle cx="89" cy="48" r="9"/><circle cx="110" cy="44" r="11"/>`,
+    bin: `<rect x="55" y="10" width="90" height="140" rx="4"/><line x1="55" y1="55" x2="145" y2="55"/><line x1="55" y1="100" x2="145" y2="100"/><polyline points="64,55 70,32 96,32 102,55"/><polyline points="64,100 70,77 96,77 102,100"/><polyline points="106,150 112,127 138,127 144,150"/>`,
+    dresser: `<rect x="32" y="52" width="136" height="10" rx="3"/><rect x="40" y="62" width="120" height="76" rx="4"/><line x1="100" y1="62" x2="100" y2="138"/><line x1="90" y1="94" x2="90" y2="106"/><line x1="110" y1="94" x2="110" y2="106"/>`,
+    wardrobe: `<rect x="55" y="10" width="90" height="140" rx="4"/><line x1="100" y1="10" x2="100" y2="150"/><line x1="93" y1="72" x2="93" y2="88"/><line x1="107" y1="72" x2="107" y2="88"/><line x1="61" y1="26" x2="94" y2="26"/><path d="M74 26 v6 a4 4 0 0 0 8 0"/>`,
+    bed: `<rect x="25" y="82" width="150" height="28" rx="3"/><line x1="75" y1="82" x2="75" y2="110"/><line x1="125" y1="82" x2="125" y2="110"/><rect x="25" y="64" width="150" height="18" rx="8"/><rect x="31" y="50" width="34" height="15" rx="6"/><circle cx="45" cy="122" r="9"/><circle cx="100" cy="122" r="9"/><circle cx="155" cy="122" r="9"/><line x1="49" y1="131" x2="53" y2="137"/><line x1="159" y1="131" x2="163" y2="137"/>`,
+    radiator: `<rect x="30" y="56" width="140" height="11" rx="3"/><rect x="42" y="67" width="116" height="66" rx="6"/><line x1="54" y1="84" x2="146" y2="84"/><line x1="54" y1="100" x2="146" y2="100"/><line x1="54" y1="116" x2="146" y2="116"/><line x1="52" y1="133" x2="52" y2="146"/><line x1="148" y1="133" x2="148" y2="146"/>`,
+    pegboard: `<rect x="45" y="18" width="110" height="124" rx="8"/><circle cx="70" cy="45" r="3"/><circle cx="100" cy="45" r="3"/><circle cx="130" cy="45" r="3"/><circle cx="85" cy="72" r="3"/><circle cx="115" cy="72" r="3"/><circle cx="70" cy="99" r="3"/><circle cx="100" cy="99" r="3"/><circle cx="130" cy="99" r="3"/><circle cx="85" cy="126" r="3"/><circle cx="115" cy="126" r="3"/>`,
+    knifebar: `<rect x="35" y="78" width="130" height="15" rx="5"/><path d="M62 78 L60 30 L74 78"/><path d="M95 78 L96 24 L108 78"/><path d="M128 78 L124 40 L140 78"/>`,
+    shoe: `<rect x="42" y="66" width="116" height="76" rx="4"/><line x1="42" y1="94" x2="158" y2="86"/><line x1="42" y1="120" x2="158" y2="112"/>`,
+  };
+  return `<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">${S[type]||S.open}</svg>`;
+}
+function renderModels(){
+  const c = CATS.find(x=>x.id===state.cat);
+  $("#catTitle").innerHTML = `<strong>${c[lang]}</strong>`;
+  const g = $("#modelGrid"); g.innerHTML = "";
+  c.designs.forEach(dz=>{
+    const d = document.createElement("div");
+    d.className = "model";
+    const badges = [];
+    if(dz.p.doorType && dz.p.doorType!=="none") badges.push(t("doors"));
+    if(dz.p.frontMode==="plate") badges.push(t("frontPlate"));
+    d.innerHTML = `${modelSVG(dz.icon)}
+      <h3>${dz[lang]}</h3>${badges.length?`<p>${badges.join(" · ")}</p>`:"<p>&nbsp;</p>"}
+      <div class="dims">${dz.p.w} × ${dz.p.h} × ${dz.p.d} mm</div>`;
+    d.onclick = ()=>{ selectDesign(dz); go(2); };
+    g.appendChild(d);
+  });
+}
+function selectDesign(dz){
+  state.design = dz; state.icon = dz.icon;
+  Object.assign(state, DESIGN_DEFAULTS, dz.p);
+  syncControls();
+}
+
+/* ============================== RENDER: CONTROLS ============================== */
+function segRender(el, items, cur, cb){
+  el.innerHTML = "";
+  items.forEach(([v,k])=>{
+    const s = document.createElement("div"); s.textContent = t(k);
+    if(v===cur) s.className = "on";
+    s.onclick = ()=>cb(v);
+    el.appendChild(s);
+  });
+}
+function matGridRender(el, cur, cb, list){
+  el.innerHTML = "";
+  (list||MATS).forEach(m=>{
+    const d = document.createElement("div");
+    d.className = "mat"+(cur===m.id?" on":"");
+    d.innerHTML = `<span class="sw" style="background:${m.sw}"></span>
+                   <span class="nm">${m[lang]}<br><span class="pr">${fmt(m.pricePerM2)} ₺/m²</span></span>`;
+    d.onclick = ()=>cb(m.id);
+    el.appendChild(d);
+  });
+}
+function syncControls(){
+  $("#wRange").value = state.w; $("#hRange").value = state.h; $("#dRange").value = state.d;
+  $("#wVal").textContent = state.w+" mm"; $("#hVal").textContent = state.h+" mm"; $("#dVal").textContent = state.d+" mm";
+  // shelf segments 0..8
+  const ss = $("#shelfSeg"); ss.innerHTML = "";
+  for(let i=0;i<=8;i++){
+    const s = document.createElement("div"); s.textContent = i;
+    if(i===state.shelves) s.className="on";
+    s.onclick = ()=>{ state.shelves=i; update(); };
+    ss.appendChild(s);
+  }
+  // materials
+  matGridRender($("#matGrid"), state.mat, id=>{ state.mat=id; update(); });
+  // thickness
+  const tg = $("#thickSeg"); tg.innerHTML = "";
+  THICKS.forEach(th=>{
+    const s = document.createElement("div"); s.textContent = th+" mm";
+    if(th===state.t) s.className="on";
+    s.onclick = ()=>{ state.t=th; update(); };
+    tg.appendChild(s);
+  });
+  // back / front / doors
+  segRender($("#backSeg"), [["none","backNone"],["solid","backSolid"],["window","backWindow"]],
+    state.backMode, v=>{ state.backMode=v; update(); });
+  segRender($("#frontSeg"), [["open","frontOpen"],["plate","frontPlate"]],
+    state.frontMode, v=>{ state.frontMode=v; update(); });
+  segRender($("#doorSeg"), [["none","doorNone"],["single","doorSingle"],["double","doorDouble"],["slide","doorSlide"]],
+    state.doorType, v=>{ state.doorType=v; update(); });
+  $("#doorMatCtl").style.display = state.doorType==="none" ? "none" : "";
+  matGridRender($("#doorMatGrid"), state.doorMat, id=>{ state.doorMat=id; update(); }, DOORMATS);
+  // önlük çerçeve genişliği (kaydırmalı, min 35mm — geçme mukavemeti korunur)
+  $("#frameWCtl").style.display = "";
+  $("#frameWRange").value = state.frameW;
+  $("#frameWVal").textContent = state.frameW+" mm";
+  $("#winRadRange").value = state.winRad;
+  $("#winRadVal").textContent = "R"+state.winRad+" mm";
+  $("#plateStyleCtl").style.display = (state.frontMode==="plate" && state.shelves===0) ? "" : "none";
+  segRender($("#plateStyleSeg"), [["window","psWindow"],["slats","psSlats"],["slots","psSlots"],["holes","psHoles"]],
+    state.plateStyle, v=>{ state.plateStyle=v; update(); });
+  // havalandırma yüzeyleri (çoklu seçim)
+  const vs=$("#ventSurfSeg"); vs.innerHTML="";
+  [["ventTop","vTop"],["ventSides","vSide"],["ventBottom","vBottom"],["ventCT","vCT"],["ventDoors","vDoor"]].forEach(([k,lk])=>{
+    const s=document.createElement("div"); s.textContent=t(lk);
+    if(state[k]) s.className="on";
+    s.onclick=()=>{ state[k]=!state[k]; update(); };
+    vs.appendChild(s);
+  });
+  const anyVent = state.ventTop||state.ventSides||state.ventBottom||state.ventCT||state.ventDoors||state.plateStyle==="slots";
+  ["#ventCfg1","#ventCfg2","#ventCfg3","#ventCfg4"].forEach(id=>$(id).style.display=anyVent?"":"none");
+  segRender($("#ventDirSeg"), [["h","dirH"],["v","dirV"]], state.ventDir, v=>{ state.ventDir=v; update(); });
+  $("#ventLenRange").value=state.ventLen; $("#ventLenVal").textContent=state.ventLen+" mm";
+  $("#ventWRange").value=state.ventW; $("#ventWVal").textContent=state.ventW+" mm";
+  $("#stagTgl").classList.toggle("on", state.ventStagger);
+  $("#divTgl").classList.toggle("on", state.divider);
+  $("#noBotTgl").classList.toggle("on", state.noBottom);
+  $("#divPosCtl").style.display = state.divider ? "" : "none";
+  $("#divPosRange").value=state.dividerPos; $("#divPosVal").textContent="%"+state.dividerPos;
+  // modüller + tekerlekler
+  const mseg = $("#modSeg"); mseg.innerHTML = "";
+  [1,2,3].forEach(n=>{
+    const s = document.createElement("div"); s.textContent = n;
+    if(n===state.modules) s.className="on";
+    s.onclick = ()=>{ state.modules=n; update(); };
+    mseg.appendChild(s);
+  });
+  $("#modVal").textContent = state.modules>1 ? state.modules+" adet" : "";
+  segRender($("#wheelSeg"), [["none","wheelsNone"],["feet","wheelsFeet"],["fixed","wheelsFixed"],["brake","wheelsBrake"]],
+    state.wheels, v=>{ state.wheels=v; update(); });
+  $("#wheelColCtl").style.display = state.wheels==="none" ? "none" : "";
+  segRender($("#wheelColSeg"), [["black","colBlack"],["gray","colGray"]],
+    state.wheelCol, v=>{ state.wheelCol=v; update(); });
+  // kapak yapısı
+  segRender($("#capModeSeg"), [["inset","capInset"],["overlay","capOverlay"]],
+    state.capMode, v=>{ state.capMode=v; update(); });
+  // tezgah tablası
+  segRender($("#ctSeg"), [["none","ctNone"],["masif","ctMasif"],["ply","ctPly"]],
+    state.ct, v=>{ state.ct=v; update(); });
+  document.querySelectorAll(".ct-sub").forEach(el=>el.style.display = state.ct==="none" ? "none" : "");
+  const ctg = $("#ctTSeg"); ctg.innerHTML = "";
+  [20,30,40].forEach(tt=>{
+    const s = document.createElement("div"); s.textContent = tt+" mm";
+    if(tt===state.ctT) s.className="on";
+    s.onclick = ()=>{ state.ctT=tt; update(); };
+    ctg.appendChild(s);
+  });
+  [["F","ctOverF"],["B","ctOverB"],["L","ctOverL"],["R","ctOverR"]].forEach(([sfx,key])=>{
+    $("#ctOver"+sfx+"Range").value = state[key];
+    $("#ctOver"+sfx+"Val").textContent = "+"+state[key]+" mm";
+  });
+  segRender($("#ctRadModeSeg"), [["front","ctRadFront"],["all","ctRadAll"]],
+    state.ctRadMode, v=>{ state.ctRadMode=v; update(); });
+  $("#ctGrooveTgl").classList.toggle("on", state.ctGroove);
+  $("#ctRadRange").value = state.ctRad;  $("#ctRadVal").textContent = "R"+state.ctRad+" mm";
+  // toggles
+  $("#winTgl").classList.toggle("on", state.windows);
+  $("#explBtn").classList.toggle("on", state.explode);
+  $("#frameTgl").classList.toggle("on", state.frame);
+  $("#frameRadRange").value=state.frameRad; $("#frameRadVal").textContent="R"+state.frameRad+" mm";
+  // FLAT ürünlerde kutu kontrollerini gizle
+  const isFlat = !!state.flat;
+  ["#dRange","#shelfSeg","#backSeg","#frontSeg","#doorSeg","#capModeSeg","#ventSurfSeg","#modSeg","#wheelSeg","#ctSeg","#divTgl","#noBotTgl","#winRadRange","#winTgl"].forEach(s=>{
+    const el=document.querySelector(s); if(el){ const c=el.closest(".ctl"); if(c) c.style.display = isFlat ? "none" : ""; }
+  });
+  if(isFlat){
+    ["#plateStyleCtl","#doorMatCtl","#wheelColCtl","#divPosCtl","#frameWCtl"].forEach(s=>{ const el=document.querySelector(s); if(el) el.style.display="none"; });
+    document.querySelectorAll(".ct-sub").forEach(el=>el.style.display="none");
+  }
+  $("#pegStyleCtl").style.display = state.flat==="pegboard" ? "" : "none";
+  segRender($("#pegStyleSeg"), [["holes","pegHoles"],["slots","pegSlots"]], state.pegStyle, v=>{ state.pegStyle=v; update(); });
+  const pegHoleMode = state.flat==="pegboard" && state.pegStyle==="holes";
+  $("#pegDCtl").style.display = pegHoleMode ? "" : "none";
+  $("#pegPitchCtl").style.display = pegHoleMode ? "" : "none";
+  $("#pegDRange").value=state.pegD; $("#pegDVal").textContent="Ø"+state.pegD+" mm";
+  $("#pegPitchRange").value=state.pegPitch; $("#pegPitchVal").textContent=state.pegPitch+" mm";
+  if(state.flat==="pegboard" && state.pegStyle==="slots")
+    ["#ventCfg1","#ventCfg2","#ventCfg3","#ventCfg4"].forEach(id=>$(id).style.display="");
+  // kenar radiusu: CNC + mukavemet güvenli aralık (maks min(10, T/2))
+  const eMax = Math.min(10, Math.floor(state.t/2));
+  const eR = $("#edgeRange"); eR.max = eMax;
+  if(state.edgeR > eMax) state.edgeR = eMax;
+  eR.value = state.edgeR;
+  $("#edgeVal").textContent = state.edgeR>0 ? "R"+state.edgeR+" mm" : "—";
+  applyRelevance();
+  updatePrice();
+}
+
+/* ===== ÜRÜN-SPESİFİK KONTROL GÖRÜNÜRLÜĞÜ ===== */
+const FEAT_BY_ID = {
+  wRange:'dim', hRange:'dim', dRange:'depth', shelfSeg:'shelves', matGrid:'mat',
+  doorSeg:'doors', doorMatGrid:'doorMat', capModeSeg:'cap', thickSeg:'thick',
+  backSeg:'back', frontSeg:'front', frameWRange:'frame', winRadRange:'winrad',
+  plateStyleSeg:'plate', ventSurfSeg:'vent',
+  ventDirSeg:'ventcfg', ventLenRange:'ventcfg', ventWRange:'ventcfg', stagTgl:'ventcfg',
+  divTgl:'divider', divPosRange:'divpos', noBotTgl:'nobot',
+  pegStyleSeg:'peg', pegDRange:'pegsub', pegPitchRange:'pegsub',
+  modSeg:'modules', wheelSeg:'base', wheelColSeg:'basecol',
+  ctSeg:'ct', ctTSeg:'ctsub', ctOverFRange:'ctsub', ctOverBRange:'ctsub',
+  ctOverLRange:'ctsub', ctOverRRange:'ctsub', ctRadModeSeg:'ctsub', ctGrooveTgl:'ctsub',
+  edgeRange:'edge', winTgl:'windows', frameTgl:'frame2', frameRadRange:'framerad',
+};
+let _featTagged=false;
+function tagFeats(){
+  if(_featTagged) return; _featTagged=true;
+  document.querySelectorAll(".ctl").forEach(el=>{
+    for(const id in FEAT_BY_ID){ if(el.querySelector("#"+id)){ el.dataset.feat=FEAT_BY_ID[id]; break; } }
+  });
+}
+const FAM_FEATS = {
+  RAF:     ['dim','mat','thick','depth','shelves','back','frame2','framerad','base','edge'],
+  COUNTER: ['dim','mat','thick','depth','shelves','back','front','frame','winrad','frame2','framerad','ct','ctsub','base','edge'],
+};
+function productFamily(){ return state.product==='counter' ? 'COUNTER' : 'RAF'; }
+function applyRelevance(){
+  tagFeats();
+  const F = FAM_FEATS[productFamily()] || FAM_FEATS.SURFACE;
+  const has = x => F.includes(x);
+  const anyVent = state.ventTop||state.ventSides||state.ventBottom||state.ventCT||state.ventDoors||state.plateStyle==='slots';
+  const vis = f => {
+    switch(f){
+      case 'doorMat': return has('doors') && state.doorType!=='none';
+      case 'basecol': return has('base') && state.wheels!=='none';
+      case 'frame':   return has('frame') && (state.frontMode==='plate' || state.backMode==='window');
+      case 'winrad':  return has('winrad') && (state.frontMode==='plate' || state.backMode==='window');
+      case 'plate':   return has('plate') && state.frontMode==='plate' && state.shelves===0;
+      case 'ventcfg': return (has('vent') && anyVent) || (state.flat==='pegboard' && state.pegStyle==='slots');
+      case 'divpos':  return has('divider') && state.divider;
+      case 'ctsub':   return has('ct') && state.ct!=='none';
+      case 'framerad': return has('framerad') && state.frame;
+      case 'ctsub':   return has('ct') && state.ct!=='none';
+      default: return has(f);
+    }
+  };
+  document.querySelectorAll(".ctl[data-feat]").forEach(el=>{
+    el.style.display = vis(el.dataset.feat) ? "" : "none";
+  });
+  // Gelişmiş başlığı: temel-dışı görünür kontrol varsa göster
+  const advHasVisible = [...document.querySelectorAll("#advBody .ctl[data-feat]")].some(e=>e.style.display!=="none");
+  $("#advHead").style.display = advHasVisible ? "" : "none";
+}
+function updatePrice(){
+  const p = computePrice();
+  $("#price").textContent = fmt(p.total)+" ₺";
+  $("#priceMeta").innerHTML = `${p.count} ${t("parts")}<br>${p.area} ${t("area")}`;
+  $("#vpDims").textContent = `${state.w} × ${state.h} × ${state.d} mm`;
+  // raf adedi + net raf aralığı
+  const NS = state.shelves;
+  const gap = NS>0 ? Math.round(state.h/(NS+1) - state.t) : null;
+  $("#sVal").textContent = gap ? `${NS} · ${gap} mm` : NS;
+}
+function update(){ syncControls(); rebuild3D(); }
+
+/* ============================== NAVIGATION ============================== */
+let cur = 0;
+function go(n){
+  cur = n; maxStep = Math.max(maxStep, n);
+  $$(".screen").forEach(s=>s.classList.remove("on"));
+  $("#s"+n).classList.add("on");
+  renderSteps();
+  window.scrollTo(0,0);
+  if(n===2){ setTimeout(()=>{ resize3D(); rebuild3D(); }, 30); }
+  if(n===3){ renderSummary(); }
+}
+
+/* ============================== LANGUAGE ============================== */
+$("#langSwitch").onclick = e=>{
+  const l = e.target.dataset.l; if(!l || l===lang) return;
+  lang = l;
+  $$("#langSwitch div").forEach(d=>d.classList.toggle("on", d.dataset.l===lang));
+  applyI18n(); renderSteps(); renderCats();
+  if(state.cat) renderModels();
+  if(state.design){ syncControls(); }
+  if(cur===3) renderSummary();
+};
+
+/* ============================== SUMMARY ============================== */
+const capz = s => s.charAt(0).toUpperCase()+s.slice(1);
+function renderSummary(){
+  const c = CATS.find(x=>x.id===state.cat);
+  const mat = MATS.find(m=>m.id===state.mat);
+  const dmat = DOORMATS.find(m=>m.id===state.doorMat);
+  $("#specList").innerHTML = `
+    <dt>${t("cat")}</dt><dd>${c[lang]}</dd>
+    <dt>${t("model")}</dt><dd>${state.design?state.design[lang]:"—"}</dd>
+    <dt>${t("dims")}</dt><dd>${state.w} × ${state.h} × ${state.d} mm</dd>
+    <dt>${t("mat")}</dt><dd>${mat[lang]}</dd>
+    <dt>${t("thick")}</dt><dd>${state.t} mm</dd>
+    <dt>${t("shelfCount")}</dt><dd>${state.shelves}</dd>
+    ${state.modules>1?`<dt>${t("modules")}</dt><dd>${state.modules}</dd>`:""}
+    ${state.wheels!=="none"?`<dt>${t("wheels")}</dt><dd>${t(state.wheels==="brake"?"wheelsBrake":state.wheels==="feet"?"wheelsFeet":"wheelsFixed")} — ${t(state.wheelCol==="black"?"colBlack":"colGray")}</dd>`:""}
+    <dt>${t("capMode")}</dt><dd>${t(state.capMode==="inset"?"capInset":"capOverlay")}</dd>
+    <dt>${t("backPanel")}</dt><dd>${t("back"+capz(state.backMode))}</dd>
+    <dt>${t("front")}</dt><dd>${t(state.frontMode==="plate"?"frontPlate":"frontOpen")}</dd>
+    ${state.frontMode==="plate"?`<dt>${t("frameW")}</dt><dd>${state.frameW} mm</dd>`:""}
+    <dt>${t("doors")}</dt><dd>${t("door"+capz(state.doorType))}${state.doorType!=="none"?" — "+dmat[lang]:""}</dd>
+    ${state.divider?`<dt>${t("divider")}</dt><dd>%${state.dividerPos}</dd>`:""}
+    ${state.ct!=="none"?`<dt>${t("ct")}</dt><dd>${t(state.ct==="masif"?"ctMasif":"ctPly")} · ${state.ctT} mm · +${state.ctOverF}/${state.ctOverB}/${state.ctOverL}/${state.ctOverR} · R${state.ctRad}${state.ctRadMode==="front"?" (ön)":""}</dd>`:""}
+    ${state.edgeR>0?`<dt>${t("edgeRound")}</dt><dd>R${state.edgeR} mm</dd>`:""}`;
+  let rows = `<tr><th>${t("part")}</th><th class="r">${t("qty")}</th><th class="r">${t("size")}</th></tr>`;
+  computeParts().forEach(p=>{
+    rows += `<tr><td>${t(p.key)}</td><td class="r">${p.qty}</td><td class="r">${p.hw?(p.key==="pFoot"?"Ø50":"Ø75"):`${p.w} × ${p.h}`}</td></tr>`;
+  });
+  $("#partsTable").innerHTML = rows;
+  $("#totalPrice").textContent = fmt(computePrice().total)+" ₺";
+}
+
+function orderModal(on){ $("#modal").classList.toggle("on", on); }
+
+/* ============================== INIT ============================== */
+applyI18n(); renderSteps(); renderCats(); syncControls();
+
+["w","h","d"].forEach(k=>{
+  $(`#${k}Range`).addEventListener("input", e=>{
+    state[k] = +e.target.value;
+    $(`#${k}Val`).textContent = state[k]+" mm";
+    updatePrice(); rebuild3D();
+  });
+});
+$("#winTgl").onclick  = ()=>{ state.windows=!state.windows; update(); };
+$("#explBtn").onclick = ()=>{ state.explode=!state.explode; $("#explBtn").classList.toggle("on", state.explode); rebuild3D(); };
+$("#advHead").onclick = ()=>{
+  const b = $("#advBody"); b.classList.toggle("open");
+  $("#advArrow").textContent = b.classList.contains("open") ? "−" : "+";
+};
+$("#frameTgl").onclick = ()=>{ state.frame=!state.frame; update(); };
+$("#frameRadRange").addEventListener("input", e=>{
+  state.frameRad=+e.target.value; $("#frameRadVal").textContent="R"+state.frameRad+" mm"; rebuild3D();
+});
+$("#edgeRange").addEventListener("input", e=>{
+  state.edgeR = +e.target.value;
+  $("#edgeVal").textContent = state.edgeR>0 ? "R"+state.edgeR+" mm" : "—";
+  rebuild3D();
+});
+$("#frameWRange").addEventListener("input", e=>{
+  state.frameW = +e.target.value;
+  $("#frameWVal").textContent = state.frameW+" mm";
+  rebuild3D();
+});
+$("#winRadRange").addEventListener("input", e=>{
+  state.winRad = +e.target.value;
+  $("#winRadVal").textContent = "R"+state.winRad+" mm";
+  rebuild3D();
+});
+$("#ventLenRange").addEventListener("input", e=>{
+  state.ventLen=+e.target.value; $("#ventLenVal").textContent=state.ventLen+" mm"; rebuild3D();
+});
+$("#ventWRange").addEventListener("input", e=>{
+  state.ventW=+e.target.value; $("#ventWVal").textContent=state.ventW+" mm"; rebuild3D();
+});
+$("#stagTgl").onclick = ()=>{ state.ventStagger=!state.ventStagger; update(); };
+$("#divTgl").onclick  = ()=>{ state.divider=!state.divider; update(); };
+$("#ctGrooveTgl").onclick = ()=>{ state.ctGroove=!state.ctGroove; update(); };
+$("#noBotTgl").onclick = ()=>{ state.noBottom=!state.noBottom; update(); };
+$("#pegDRange").addEventListener("input", e=>{ state.pegD=+e.target.value; $("#pegDVal").textContent="Ø"+state.pegD+" mm"; rebuild3D(); });
+$("#pegPitchRange").addEventListener("input", e=>{ state.pegPitch=+e.target.value; $("#pegPitchVal").textContent=state.pegPitch+" mm"; rebuild3D(); });
+$("#divPosRange").addEventListener("input", e=>{
+  state.dividerPos=+e.target.value; $("#divPosVal").textContent="%"+state.dividerPos; rebuild3D();
+});
+[["F","ctOverF"],["B","ctOverB"],["L","ctOverL"],["R","ctOverR"]].forEach(([sfx,key])=>{
+  $("#ctOver"+sfx+"Range").addEventListener("input", e=>{
+    state[key] = +e.target.value;
+    $("#ctOver"+sfx+"Val").textContent = "+"+state[key]+" mm";
+    updatePrice(); rebuild3D();
+  });
+});
+$("#ctRadRange").addEventListener("input", e=>{
+  state.ctRad = +e.target.value;
+  $("#ctRadVal").textContent = "R"+state.ctRad+" mm";
+  rebuild3D();
+});
+</script>
+<script>
+/* ============================== LIB LOADER (multi-CDN) ============================== */
+function loadLib(urls, test, cb){
+  if(test()) return cb(true);
+  if(!urls.length) return cb(false);
+  const s = document.createElement("script");
+  s.src = urls[0];
+  s.onload  = ()=> test() ? cb(true) : loadLib(urls.slice(1), test, cb);
+  s.onerror = ()=> loadLib(urls.slice(1), test, cb);
+  document.head.appendChild(s);
+}
+const THREE_URLS = [
+  "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js",
+  "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js",
+  "https://unpkg.com/three@0.128.0/build/three.min.js",
+];
+const JSPDF_URLS = [
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js",
+  "https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js",
+];
+function vpFail(msg){
+  const f = $("#vpFallback");
+  f.style.display = "flex";
+  f.innerHTML = msg;
+}
+
+/* ============================== 3D VIEW ============================== */
+let renderer, scene, camera, group;
+let rotX = -0.35, rotY = 0.6, dist = 2.8;
+
+function init3D(){
+  const canvas = $("#c3d");
+  try{
+    renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  }catch(e){
+    renderer = null;
+    vpFail(lang==="tr" ? "3D önizleme bu tarayıcıda kullanılamıyor (WebGL kapalı)." : "3D preview unavailable in this browser (WebGL disabled).");
+    return;
+  }
+  renderer.setPixelRatio(window.devicePixelRatio);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xfafafa);
+  camera = new THREE.PerspectiveCamera(38, 1, 0.01, 100);
+  const amb = new THREE.AmbientLight(0xffffff, 0.75);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.55);
+  dir.position.set(3, 5, 4);
+  const dir2 = new THREE.DirectionalLight(0xffffff, 0.2);
+  dir2.position.set(-4, 2, -3);
+  scene.add(amb, dir, dir2);
+  group = new THREE.Group();
+  scene.add(group);
+
+  // ground line grid (subtle)
+  const grid = new THREE.GridHelper(6, 24, 0xdddddd, 0xeeeeee);
+  grid.position.y = -0.001;
+  scene.add(grid);
+
+  // interaction
+  let dragging=false, px=0, py=0;
+  canvas.addEventListener("pointerdown", e=>{ dragging=true; px=e.clientX; py=e.clientY; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    rotY += (e.clientX-px)*0.008; rotX += (e.clientY-py)*0.008;
+    rotX = Math.max(-1.4, Math.min(0.3, rotX));
+    px=e.clientX; py=e.clientY; render3D();
+  });
+  canvas.addEventListener("pointerup", ()=>dragging=false);
+  canvas.addEventListener("wheel", e=>{
+    e.preventDefault();
+    dist = Math.max(1.2, Math.min(6, dist + e.deltaY*0.0018));
+    render3D();
+  }, {passive:false});
+  window.addEventListener("resize", ()=>{ if(cur===2){ resize3D(); render3D(); } });
+}
+
+function resize3D(){
+  const vp = $(".viewport");
+  const w = vp.clientWidth, h = vp.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+
+function meshFromPanel(p, T, color){
+  const M = 0.001;
+  /* Kenar radiusu: tüm dış yüz kenarlarına profil (CNC roundover). İçbükey
+     köşeler önce küçük yarıçapla yuvarlanır ki bevel kendi kendine kesişmesin. */
+  const bt = state.edgeR>0 ? Math.min(state.edgeR, T/3, 6) : 0;
+  let outl = p.outline;
+  if(bt>0) outl = filletConcaveAll(outl, Math.max(3, bt*1.3));
+  const shp = new THREE.Shape(outl.map(q=>new THREE.Vector2(q[0]*M, q[1]*M)));
+  (p.holes||[]).forEach(h=>{
+    shp.holes.push(new THREE.Path(h.map(q=>new THREE.Vector2(q[0]*M, q[1]*M))));
+  });
+  const opts = bt>0
+    ? {depth:(T-2*bt)*M, bevelEnabled:true, bevelThickness:bt*M, bevelSize:bt*M, bevelOffset:-bt*M, bevelSegments:2, curveSegments:6}
+    : {depth:T*M, bevelEnabled:false, curveSegments:6};
+  const geo = new THREE.ExtrudeGeometry(shp, opts);
+  if(bt>0) geo.translate(0,0,bt*M);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color}));
+  mesh.add(new THREE.LineSegments(
+    new THREE.EdgesGeometry(geo, 25),
+    new THREE.LineBasicMaterial({color:0x000000, transparent:true, opacity:state.edgeR>0?0.12:0.3})
+  ));
+  return mesh;
+}
+
+function rebuild3D(){
+  if(!renderer) return;
+  while(group.children.length) group.remove(group.children[0]);
+  const M = 0.001, T = state.t;
+  const col = MATS.find(m=>m.id===state.mat).color;
+  const E = state.explode ? Math.max(state.w, state.h, state.d)*0.22 : 0;
+  const mods = state.modules, dir = state.moduleDir;
+  const stepX = dir==="x" ? state.w+2*T+4 : 0;
+  const stepZ = dir==="z" ? state.d+2*T+4 : 0;
+  const panels = buildUnitPanels();
+  for(let mi=0; mi<mods; mi++){
+    const ox = (mi-(mods-1)/2)*stepX, oz = (mi-(mods-1)/2)*stepZ;
+    panels.forEach(ent=>{
+      const entCol = ent.matId ? DOORMATS.find(x=>x.id===ent.matId).color : col;
+      ent.place.forEach(pl=>{
+        const m = meshFromPanel(ent.panel, T, entCol);
+        if(ent.matId==="glass"){
+          m.material.transparent=true; m.material.opacity=0.32;
+        }
+        if(pl.rot){ if(pl.rot[0]==="Y") m.rotation.y = pl.rot[1]; else m.rotation.x = pl.rot[1]; }
+        m.position.set(
+          (pl.pos[0] + pl.n[0]*E + ox)*M,
+          (pl.pos[1] + pl.n[1]*E)*M,
+          (pl.pos[2] + pl.n[2]*E + oz)*M
+        );
+        group.add(m);
+      });
+    });
+    if(state.wheels!=="none"){
+      const feet = state.wheels==="feet";
+      const wr = feet ? 25 : 37.5, wh = feet ? 60 : 24;
+      const wcol = state.wheelCol==="black" ? 0x1f1f1f : 0x9a9a9a;
+      const inset=70;
+      [[-state.w/2+inset, state.d/2-inset],[state.w/2-inset, state.d/2-inset],
+       [-state.w/2+inset,-state.d/2+inset],[state.w/2-inset,-state.d/2+inset]].forEach(([wx,wz])=>{
+        const cm = new THREE.Mesh(
+          new THREE.CylinderGeometry(wr*M, wr*M, wh*M, 18),
+          new THREE.MeshLambertMaterial({color:wcol}));
+        const b0 = state.capMode==="inset" ? 0 : T;
+        if(!feet) cm.rotation.z = Math.PI/2;
+        cm.position.set((wx+ox)*M, feet ? (-b0-wh/2)*M : (-b0-wr)*M, (wz+oz)*M);
+        group.add(cm);
+        if(state.wheels==="brake"){
+          const bm = new THREE.Mesh(
+            new THREE.BoxGeometry(10*M, 18*M, 8*M),
+            new THREE.MeshLambertMaterial({color:wcol}));
+          bm.position.set((wx+ox)*M, (-T-wr+8)*M, (wz+oz+wr*0.8)*M);
+          group.add(bm);
+        }
+      });
+    }
+  }
+  if(state.ct!=="none"){
+    const ctT=state.ctT;
+    const {baseW,baseD,totW,totD}=ctDims();
+    const rr=Math.max(0.6, Math.min(state.ctRad, totW/4, totD/4));
+    const rb=state.ctRadMode==="all" ? rr : 0.6;        // arka köşeler: duvara yaslı → köşeli
+    const x0=-baseW/2-state.ctOverL, x1=baseW/2+state.ctOverR;
+    const y0=-(baseD/2+state.ctOverF), y1=baseD/2+state.ctOverB;  // y0 = ÖN (z'ye -v map)
+    const pts = roundedRectMulti(x0,y0,x1,y1,[rr,rb,rb,rr]);
+    const shp = new THREE.Shape(pts.map(q=>new THREE.Vector2(q[0]*M,q[1]*M)));
+    if(state.ventCT){
+      slotHoles(x0+70, y0+70, x1-70, y1-70).forEach(h=>{
+        shp.holes.push(new THREE.Path(h.map(q=>new THREE.Vector2(q[0]*M, q[1]*M))));
+      });
+    }
+    const geo = new THREE.ExtrudeGeometry(shp,{depth:ctT*M, bevelEnabled:false, curveSegments:6});
+    const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:state.ct==="masif" ? 0xb98a5c : 0xd9c49a}));
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,25), new THREE.LineBasicMaterial({color:0x000000,transparent:true,opacity:0.3})));
+    mesh.rotation.x = -Math.PI/2;
+    const seated = state.capMode==="inset" && state.ctGroove;
+    mesh.position.y = (state.h + (seated ? -8 : (state.capMode==="inset"?0:T)) + (state.explode ? Math.max(state.w,state.h,state.d)*0.3 : 0))*M;
+    group.add(mesh);
+  }
+  group.position.y = state.wheels==="none" ? 0 : ((state.capMode==="inset"?0:T) + (state.wheels==="feet" ? 60 : 75))*M;
+  render3D();
+}
+
+function render3D(){
+  if(!renderer) return;
+  const {h} = state;
+  const H = h*0.001;
+  const mx = state.moduleDir==="x" ? state.modules : 1;
+  const mz = state.moduleDir==="z" ? state.modules : 1;
+  const r = dist * Math.max(state.w*mx, state.h, state.d*mz)*0.001;
+  camera.position.set(
+    r*Math.sin(rotY)*Math.cos(rotX),
+    H/2 - r*Math.sin(rotX),
+    r*Math.cos(rotY)*Math.cos(rotX)
+  );
+  camera.lookAt(0, H/2, 0);
+  renderer.render(scene, camera);
+}
+loadLib(THREE_URLS, ()=>typeof THREE!=="undefined", ok=>{
+  if(!ok){
+    vpFail(lang==="tr"
+      ? "3D önizleme yüklenemedi.<br>İnternet bağlantınızı kontrol edip sayfayı yenileyin."
+      : "3D preview could not load.<br>Check your internet connection and refresh.");
+    return;
+  }
+  init3D();
+  if(cur===2){ resize3D(); rebuild3D(); }
+});
+loadLib(JSPDF_URLS, ()=>!!window.jspdf, ()=>{});
+
+/* ============================== DXF EXPORT (gerçek kesim dosyası) ============================== */
+function dxfPoly(pts, dx, dy, layer){
+  let s = `0\nPOLYLINE\n8\n${layer}\n66\n1\n70\n1\n`;
+  pts.forEach(p=>{ s += `0\nVERTEX\n8\n${layer}\n10\n${(p[0]+dx).toFixed(3)}\n20\n${(p[1]+dy).toFixed(3)}\n30\n0.0\n`; });
+  s += `0\nSEQEND\n`;
+  return s;
+}
+function dxfCircle(x, y, r, layer){
+  return `0\nCIRCLE\n8\n${layer}\n10\n${x.toFixed(3)}\n20\n${y.toFixed(3)}\n40\n${r.toFixed(3)}\n`;
+}
+function dxfText(x, y, txt, hgt, layer){
+  return `0\nTEXT\n8\n${layer}\n10\n${x.toFixed(2)}\n20\n${y.toFixed(2)}\n40\n${hgt}\n1\n${txt}\n`;
+}
+function buildDXF(){
+  // Levhaya yerleştirme: 2440 mm genişlik, satır satır
+  const SHEET = 2440, GAP = 25, MARGIN = 25;
+  let ents = "", x = MARGIN, y = MARGIN, rh = 0;
+  for(let _m=0; _m<state.modules; _m++) buildUnitPanels().forEach(ent=>{
+    for(let i=0;i<ent.qty;i++){
+      const bb = bboxOf(ent.panel.outline);
+      const w = bb[2]-bb[0], h = bb[3]-bb[1];
+      if(x + w > SHEET - MARGIN){ x = MARGIN; y += rh + GAP; rh = 0; }
+      const dx = x - bb[0], dy = y - bb[1];
+      ents += dxfPoly(ent.panel.outline, dx, dy, "CUT_OUTER");
+      (ent.panel.holes||[]).forEach(hl=> ents += dxfPoly(hl, dx, dy, "CUT_INNER"));
+      (ent.panel.dogbones||[]).forEach(db=> ents += dxfCircle(db[0]+dx, db[1]+dy, db[2], "DOGBONE"));
+      (ent.panel.grooves||[]).forEach(g=> ents += dxfPoly(g, dx, dy, "GROOVE"));
+      ents += dxfText(x+12, y+12, `ZMANO ${t(ent.key)}${ent.qty>1?" "+(i+1):""} ${Math.round(w)}x${Math.round(h)}x${state.t}`, 14, "ENGRAVE");
+      x += w + GAP; rh = Math.max(rh, h);
+    }
+  });
+  if(state.ct!=="none"){
+    const T2=state.t;
+    const {totW,totD}=ctDims();
+    const oF=state.ctOverF, oB=state.ctOverB, oL=state.ctOverL, oR=state.ctOverR;
+    const rr=Math.max(0.6, Math.min(state.ctRad, totW/4, totD/4));
+    const rb=state.ctRadMode==="all" ? rr : 0.6;
+    const o = roundedRectMulti(0,0,totW,totD,[rr,rb,rb,rr]);   // y=0 kenarı ÖN
+    if(x+totW>SHEET-MARGIN){ x=MARGIN; y+=rh+GAP; rh=0; }
+    ents += dxfPoly(o, x, y, "CUT_OUTER");
+    if(state.ventCT) slotHoles(70,70,totW-70,totD-70).forEach(h=>ents+=dxfPoly(h,x,y,"CUT_INNER"));
+    if(state.ctGroove && state.capMode==="inset"){
+      /* Tabla alt yüzü oturma kanalı: karkas çevresi (8mm derin pocket) */
+      ents += dxfPoly(rectPath(oL-1, oF-1, totW-oR+1, totD-oB+1), x, y, "GROOVE");
+      ents += dxfPoly(rectPath(oL+T2+1, oF+T2+1, totW-oR-T2-1, totD-oB-T2-1), x, y, "GROOVE");
+    }
+    ents += dxfText(x+12, y+12, `ZMANO ${t("pTabla")} ${Math.round(totW)}x${Math.round(totD)}x${state.ctT}`, 14, "ENGRAVE");
+    x += totW+GAP; rh = Math.max(rh, totD);
+  }
+  const layers =
+    `0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n4\n`+
+    `0\nLAYER\n2\nCUT_OUTER\n70\n0\n62\n1\n6\nCONTINUOUS\n`+
+    `0\nLAYER\n2\nCUT_INNER\n70\n0\n62\n5\n6\nCONTINUOUS\n`+
+    `0\nLAYER\n2\nDOGBONE\n70\n0\n62\n2\n6\nCONTINUOUS\n`+
+    `0\nLAYER\n2\nENGRAVE\n70\n0\n62\n7\n6\nCONTINUOUS\n`+
+    `0\nLAYER\n2\nGROOVE\n70\n0\n62\n6\n6\nCONTINUOUS\n`+
+    `0\nENDTAB\n0\nENDSEC\n`;
+  return `0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n${layers}0\nSECTION\n2\nENTITIES\n${ents}0\nENDSEC\n0\nEOF\n`;
+}
+function downloadDXF(){
+  const blob = new Blob([buildDXF()], {type:"application/dxf"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `zmano_${state.cat}_${state.icon}_${state.w}x${state.h}x${state.d}.dxf`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ============================== PDF EXPORT ============================== */
+function downloadPDF(){
+  if(!window.jspdf){
+    loadLib(JSPDF_URLS, ()=>!!window.jspdf, ok=>{
+      if(ok) downloadPDF();
+      else alert(lang==="tr"
+        ? "PDF kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin."
+        : "PDF library could not load. Check your internet connection.");
+    });
+    return;
+  }
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const c = CATS.find(x=>x.id===state.cat);
+  const mat = MATS.find(m=>m.id===state.mat);
+  const dmat = DOORMATS.find(m=>m.id===state.doorMat);
+  const price = computePrice();
+  const L = 20; let y = 24;
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setCharSpace(3);
+  doc.text("ZMANO", L, y);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(120);
+  doc.text(t("tagline"), L, y+6);
+  doc.setDrawColor(0); doc.setLineWidth(0.4); doc.line(L, y+12, 190, y+12);
+  y += 24;
+
+  doc.setTextColor(0); doc.setFontSize(13);
+  doc.text(`${c[lang]} — ${state.design?state.design[lang]:""}`, L, y); y += 10;
+
+  doc.setFontSize(9); doc.setTextColor(120);
+  const spec = [
+    [t("dims"), `${state.w} x ${state.h} x ${state.d} mm`],
+    [t("mat"), mat[lang]],
+    [t("thick"), `${state.t} mm`],
+    [t("shelfCount"), `${state.shelves}`],
+    [t("capMode"), t(state.capMode==="inset"?"capInset":"capOverlay")],
+    [t("backPanel"), t("back"+capz(state.backMode))],
+    [t("front"), t(state.frontMode==="plate"?"frontPlate":"frontOpen")],
+    [t("doors"), t("door"+capz(state.doorType)) + (state.doorType!=="none" ? " — "+dmat[lang] : "")],
+  ];
+  if(state.frontMode==="plate") spec.push([t("frameW"), state.frameW+" mm"]);
+  if(state.modules>1) spec.push([t("modules"), String(state.modules)]);
+  if(state.wheels!=="none") spec.push([t("wheels"), t(state.wheels==="brake"?"wheelsBrake":state.wheels==="feet"?"wheelsFeet":"wheelsFixed")+" — "+t(state.wheelCol==="black"?"colBlack":"colGray")]);
+  if(state.divider) spec.push([t("divider"), "%"+state.dividerPos]);
+  if(state.ct!=="none") spec.push([t("ct"), t(state.ct==="masif"?"ctMasif":"ctPly")+" "+state.ctT+"mm +"+state.ctOverF+"/"+state.ctOverB+"/"+state.ctOverL+"/"+state.ctOverR+" R"+state.ctRad]);
+  if(state.edgeR>0) spec.push([t("edgeRound"), "R"+state.edgeR+" mm"]);
+  spec.forEach(s=>{
+    doc.setTextColor(120); doc.text(s[0].toUpperCase(), L, y);
+    doc.setTextColor(0);   doc.text(s[1], L+55, y);
+    y += 6;
+  });
+  y += 6;
+
+  // front view technical drawing
+  const maxW = 70, scale = Math.min(maxW/state.w, 80/state.h);
+  const dw = state.w*scale, dh = state.h*scale, dx = 125, dy = 50;
+  doc.setLineWidth(0.5); doc.setDrawColor(0);
+  doc.rect(dx, dy, dw, dh);
+  const T2 = state.t*scale;
+  doc.setLineWidth(0.25);
+  for(let i=1;i<=state.shelves;i++){
+    const sy = dy + dh - (T2 + (dh-2*T2)*i/(state.shelves+1));
+    doc.line(dx+T2, sy, dx+dw-T2, sy);
+  }
+  doc.line(dx+T2, dy, dx+T2, dy+dh); doc.line(dx+dw-T2, dy, dx+dw-T2, dy+dh);
+  doc.setFontSize(7); doc.setTextColor(120);
+  doc.text(`${state.w} mm`, dx+dw/2, dy-2, {align:"center"});
+  doc.text(`${state.h} mm`, dx-2, dy+dh/2, {align:"right"});
+
+  // parts table
+  y = Math.max(y, dy+dh+14);
+  doc.setFontSize(8); doc.setTextColor(120); doc.setCharSpace(1);
+  doc.text(t("partsList").toUpperCase(), L, y); doc.setCharSpace(0); y += 3;
+  doc.line(L, y, 190, y); y += 6;
+  doc.setTextColor(0); doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(t("part"), L, y); doc.text(t("qty"), 120, y, {align:"right"}); doc.text(t("size"), 175, y, {align:"right"});
+  doc.setTextColor(0); y += 6;
+  computeParts().forEach(p=>{
+    doc.text(t(p.key), L, y);
+    doc.text(String(p.qty), 120, y, {align:"right"});
+    doc.text(p.hw ? (p.key==="pFoot"?"O50 mm":"O75 mm") : `${p.w} x ${p.h} x ${p.tt||state.t}`, 175, y, {align:"right"});
+    doc.setDrawColor(220); doc.setLineWidth(0.15); doc.line(L, y+2, 190, y+2);
+    y += 7;
+  });
+  y += 6;
+  doc.setDrawColor(0); doc.setLineWidth(0.4); doc.line(L, y, 190, y); y += 8;
+  doc.setFontSize(13);
+  doc.text(t("total"), L, y);
+  doc.text(`${fmt(price.total)} TL`, 190, y, {align:"right"});
+  y += 14;
+  doc.setFontSize(8); doc.setTextColor(120);
+  doc.text(doc.splitTextToSize(t("prodNote"), 170), L, y);
+
+  doc.setFontSize(7);
+  doc.text(`ZMANO © 2026 — ${t("footerQuote")}`, L, 285);
+  doc.save(`zmano_${state.cat}_${state.icon}.pdf`);
+}
+</script>
+</body>
+</html>
